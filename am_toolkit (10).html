@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Management Performance Toolkit</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --orange:#CD3B00;--amber:#DF6C01;--navy:#1A2539;--navy-2:#243149;--navy-3:#2E3D5C;
+    --ink:#1A2539;--paper:#F6F4EF;--line:#D8D3C8;
+    --good:#2E7D4F;--good-bg:#DFF0E5;--part-bg:#FBE9D2;--gap-bg:#F9DCD2;--none-bg:#EDEBE4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--paper);color:var(--ink);padding-bottom:70px;}
+  header{background:var(--navy);color:#fff;padding:24px 36px 0;border-bottom:5px solid var(--orange);}
+  header .eyebrow{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:6px;}
+  header h1{font-size:24px;font-weight:700;}
+  header p{margin-top:5px;font-size:12.5px;color:#B9C2D4;max-width:860px;}
+  .hbtn{background:var(--navy-2);border:1px solid var(--navy-3);color:#B9C2D4;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;}
+  .hbtn:hover{color:#fff;border-color:var(--amber);}
+  @media print{.hbtn,#saveStatus,#authBar{display:none !important;}}
+  .tabs{display:flex;gap:4px;margin-top:18px;flex-wrap:wrap;}
+  .tab{
+    background:var(--navy-2);color:#B9C2D4;border:none;border-radius:8px 8px 0 0;
+    padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px;
+  }
+  .tab:hover{color:#fff;}
+  .tab.active{background:var(--paper);color:var(--navy);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .wrap{max-width:1340px;margin:0 auto;padding:24px 36px;}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;}
+  .chip{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;}
+  .dot{width:12px;height:12px;border-radius:3px;display:inline-block;}
+  .dot.s3{background:var(--good);} .dot.s2{background:var(--amber);} .dot.s1{background:var(--orange);} .dot.s0{background:#A8A395;}
+  .btn{background:var(--orange);color:#fff;border:none;border-radius:6px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px;}
+  .btn:hover{background:#B33400;}
+  .btn.ghost{background:transparent;color:var(--navy);border:1.5px solid var(--navy);}
+  .btn.ghost:hover{background:var(--navy);color:#fff;}
+  .hint{font-size:12px;color:#7A7566;margin-bottom:14px;}
+
+  .matrix-scroll{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 2px 10px rgba(26,37,57,.06);}
+  table.mx{border-collapse:collapse;width:100%;min-width:1160px;}
+  table.mx thead th{background:var(--navy);color:#fff;font-size:11.5px;font-weight:600;padding:12px 8px;vertical-align:bottom;text-align:center;line-height:1.35;border-right:1px solid var(--navy-3);}
+  table.mx thead th .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--amber);color:var(--navy);font-weight:800;font-size:11px;margin-bottom:6px;}
+  table.mx thead th:first-child{text-align:left;padding-left:16px;min-width:200px;}
+  table.mx thead th:last-child{border-right:none;background:var(--navy-2);}
+  table.mx tbody td{border-top:1px solid var(--line);border-right:1px solid #EEEAE0;padding:0;text-align:center;vertical-align:top;}
+  table.mx tbody td:first-child{text-align:left;padding:10px 8px 10px 16px;font-weight:600;font-size:13.5px;background:#FCFBF8;min-width:200px;}
+  .asset-name{border:none;background:transparent;font:inherit;width:100%;padding:2px 4px;border-radius:4px;}
+  .asset-name:focus{outline:2px solid var(--amber);background:#fff;}
+  .cellwrap{display:flex;flex-direction:column;height:100%;}
+  .cell{width:100%;border:none;cursor:pointer;padding:12px 6px 8px;font-size:11.5px;font-weight:700;letter-spacing:.3px;transition:filter .12s;}
+  .cell:hover{filter:brightness(.94);}
+  .cell.s0{background:var(--none-bg);color:#8B8677;} .cell.s1{background:var(--gap-bg);color:var(--orange);}
+  .cell.s2{background:var(--part-bg);color:#9A5200;} .cell.s3{background:var(--good-bg);color:var(--good);}
+  .notebtn{border:none;cursor:pointer;font-size:10.5px;font-weight:600;padding:4px 6px 5px;color:#8B8677;display:flex;align-items:center;justify-content:center;gap:4px;}
+  .cell.s0 + .notebtn{background:var(--none-bg);} .cell.s1 + .notebtn{background:var(--gap-bg);}
+  .cell.s2 + .notebtn{background:var(--part-bg);} .cell.s3 + .notebtn{background:var(--good-bg);}
+  .notebtn:hover{color:var(--navy);text-decoration:underline;}
+  .notebtn .flag{width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block;}
+  .notepanel{display:none;} .notepanel.open{display:block;}
+  .actions{text-align:left;background:#F2F5FB;border-top:1px solid var(--line);padding:8px 9px 9px;font-size:11px;line-height:1.5;color:var(--navy);}
+  .actions .atitle{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;color:var(--amber);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:6px;}
+  .actions ul{margin:0;padding-left:16px;}
+  .actions li{margin-bottom:3px;font-weight:400;}
+  .useact{background:none;border:1px solid var(--navy);color:var(--navy);border-radius:4px;font-size:9.5px;font-weight:700;cursor:pointer;padding:2px 7px;}
+  .useact:hover{background:var(--navy);color:#fff;}
+  .tools{margin-top:6px;padding-top:6px;border-top:1px dotted #C9D2E4;}
+  .tools .tlabel{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;font-weight:800;color:var(--navy);opacity:.65;margin-bottom:3px;}
+  .toolchip{display:inline-block;background:#fff;border:1px solid #C9D2E4;color:var(--navy);border-radius:10px;padding:1.5px 8px;font-size:10px;font-weight:600;margin:0 4px 4px 0;line-height:1.6;cursor:pointer;text-decoration:none;}
+  .toolchip:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .notearea{display:block;width:100%;border:none;border-top:1px dashed var(--line);background:#FFFDF7;font:inherit;font-size:11.5px;padding:7px 8px;min-height:64px;resize:vertical;color:var(--ink);text-align:left;line-height:1.45;}
+  .notearea:focus{outline:2px solid var(--amber);outline-offset:-2px;}
+  td.score{font-weight:800;font-size:14px;padding:10px;background:#FCFBF8;min-width:90px;vertical-align:middle;}
+  td.score .pct{display:block;font-size:11px;font-weight:600;color:#7A7566;margin-top:2px;}
+  .bar{height:6px;border-radius:3px;background:#E6E2D8;margin-top:6px;overflow:hidden;}
+  .bar span{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--orange),var(--amber));}
+  .del{background:none;border:none;color:#B9B4A6;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:4px;line-height:1;margin-top:12px;}
+  .del:hover{color:var(--orange);background:var(--gap-bg);}
+  table.mx tfoot td{border-top:2px solid var(--navy);background:#FCFBF8;padding:10px 6px;font-size:12px;font-weight:700;text-align:center;}
+  table.mx tfoot td:first-child{text-align:left;padding-left:16px;font-size:12.5px;}
+  .pillbar{height:6px;border-radius:3px;background:#E6E2D8;margin-top:6px;overflow:hidden;}
+  .pillbar span{display:block;height:100%;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:24px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;box-shadow:0 2px 8px rgba(26,37,57,.05);}
+  .card h3{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);margin-bottom:8px;}
+  .card .big{font-size:30px;font-weight:800;color:var(--navy);}
+  .card p{font-size:12.5px;color:#5C5A50;margin-top:6px;line-height:1.5;}
+  .card.alert{border-left:5px solid var(--orange);}
+
+
+
+
+
+  /* Tab 2: pareto */
+  .pargrid{display:grid;grid-template-columns:minmax(430px,46%) 1fr;gap:18px;align-items:start;}
+  @media (max-width:1000px){.pargrid{grid-template-columns:1fr;}}
+  table.pareto{min-width:0 !important;}
+  table.pareto td.num input{border:none;background:transparent;font:inherit;font-size:11.5px;width:74px;padding:7px 6px;text-align:right;}
+  table.pareto td.num input:focus{outline:2px solid var(--amber);outline-offset:-2px;background:#fff;}
+  table.pareto td.aname input{border:none;background:transparent;font:inherit;font-size:11.5px;font-weight:600;color:var(--navy);width:100%;min-width:140px;padding:7px 8px;}
+  table.pareto td.aname input:focus{outline:2px solid var(--amber);outline-offset:-2px;background:#fff;}
+  table.pareto td.calc{padding:7px 8px;text-align:right;font-weight:700;color:var(--navy);white-space:nowrap;}
+  table.pareto tr.vital td{background:#FDEDE4 !important;}
+  table.pareto tr.vital td.calc .cum{color:var(--orange);}
+  table.pareto td .rankbadge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:800;}
+  table.pareto tr.vital td .rankbadge{background:var(--orange);}
+  .parchartcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;box-shadow:0 2px 8px rgba(26,37,57,.06);}
+  .parchartcard h3{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--navy);border-bottom:3px solid var(--orange);display:inline-block;padding-bottom:4px;margin-bottom:10px;}
+  .parlegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:#5C5A50;font-weight:600;}
+  .parlegend i{display:inline-block;width:14px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
+
+
+  /* technical availability */
+  .tacard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-top:22px;box-shadow:0 2px 8px rgba(26,37,57,.06);}
+  .tahead{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--navy);border-bottom:3px solid var(--orange);display:inline-block;padding-bottom:4px;}
+  .tagrid{display:grid;grid-template-columns:minmax(300px,34%) 1fr;gap:18px;align-items:start;}
+  @media (max-width:900px){.tagrid{grid-template-columns:1fr;}}
+  table.ta{min-width:0 !important;}
+  table.ta td input{border:none;background:transparent;font:inherit;font-size:11.5px;padding:7px 8px;width:100%;}
+  table.ta td input:focus{outline:2px solid var(--amber);outline-offset:-2px;background:#fff;}
+  table.ta td.pv input{text-align:right;width:88px;}
+
+  /* Tab 5: action plans */
+  table.ap{border-collapse:collapse;width:100%;min-width:1100px;background:#fff;font-size:11.5px;}
+  table.ap th{background:var(--navy);color:#fff;padding:9px 8px;font-size:10.5px;font-weight:600;border:1px solid var(--navy-2);text-align:left;}
+  table.ap td{border:1px solid var(--line);padding:0;background:#FFFDF7;vertical-align:top;}
+  table.ap tbody tr:nth-child(even) td{background:#FCFAF3;}
+  table.ap td[contenteditable]{padding:8px;min-width:110px;}
+  table.ap td[contenteditable]:focus{outline:2px solid var(--amber);outline-offset:-2px;background:#fff;}
+  table.ap td.dt input{border:none;background:transparent;font:inherit;font-size:11px;padding:7px 6px;width:118px;}
+  table.ap td.dt input:focus{outline:2px solid var(--amber);outline-offset:-2px;background:#fff;}
+  table.ap td.pl select{border:none;background:transparent;font:inherit;font-size:11px;padding:7px 4px;width:100%;min-width:170px;cursor:pointer;}
+  table.ap td.pl select:focus{outline:2px solid var(--amber);outline-offset:-2px;background:#fff;}
+  table.ap td.rm{text-align:center;vertical-align:middle;width:34px;}
+  table.ap thead tr.apf th{background:#FCFBF8;padding:5px 4px;border-bottom:2px solid var(--line);}
+  table.ap thead tr.apf input, table.ap thead tr.apf select{
+    width:100%;border:1px solid var(--line);border-radius:5px;padding:5px 6px;font:inherit;font-size:10.5px;
+    background:#fff;color:var(--navy);
+  }
+  table.ap thead tr.apf input:focus, table.ap thead tr.apf select:focus{outline:none;border-color:var(--amber);}
+  table.ap thead tr.apf input::placeholder{color:#B9B4A6;}
+  .ap-filtersummary{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#5C5A50;font-weight:600;margin:8px 2px 18px;flex-wrap:wrap;gap:8px;}
+  .ap-filtersummary .clearf{background:none;border:1.5px solid var(--orange);color:var(--orange);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;padding:4px 12px;}
+  .ap-filtersummary .clearf:hover{background:var(--orange);color:#fff;}
+  .apsum-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+  .apsum-card{background:#FCFBF8;border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .apsum-card .n{font-size:24px;font-weight:800;color:var(--navy);}
+  .apsum-card .l{font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:#8B8677;margin-top:2px;}
+  .apsum-card.warn .n{color:var(--orange);}
+  .apsum-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:820px){.apsum-grid{grid-template-columns:1fr;}}
+  .apsum-block h4{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--navy);border-bottom:2px solid var(--orange);display:inline-block;padding-bottom:3px;margin-bottom:10px;}
+  .apsum-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11.5px;}
+  .apsum-row .lbl{flex:0 0 190px;color:var(--navy);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .apsum-row .track{flex:1;height:9px;background:#E6E2D8;border-radius:5px;overflow:hidden;}
+  .apsum-row .track span{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--amber));border-radius:5px;}
+  .apsum-row .cnt{flex:0 0 30px;text-align:right;font-weight:800;color:var(--navy);}
+
+  .pdcacell{text-align:center;vertical-align:middle !important;min-width:86px;}
+  .pdcabtn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;margin:4px auto;padding:2px;}
+  .pdcabtn:hover svg{filter:brightness(.93);}
+  .pdcalbl{font-size:8.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#8B8677;}
+  .mvbtn{background:none;border:1px solid var(--line);color:#8B8677;border-radius:4px;font-size:9px;cursor:pointer;padding:1px 6px;line-height:1.4;}
+  .mvbtn:hover:not(:disabled){border-color:var(--navy);color:var(--navy);background:var(--paper);}
+  .mvbtn:disabled{opacity:.25;cursor:default;}
+  @media print{.mvbtn{display:none !important;}}
+
+  /* editable gantt bits */
+  .gtname{border:none;background:transparent;font:inherit;font-weight:600;color:var(--navy);width:100%;padding:1px 2px;}
+  .gtname:focus{outline:none;border-bottom:1.5px solid var(--amber);}
+  .wksel{border:1px solid var(--line);border-radius:4px;background:#fff;font:inherit;font-size:10.5px;padding:2px 2px;cursor:pointer;}
+  .wksel:focus{outline:none;border-color:var(--amber);}
+  td.wkedit{white-space:nowrap;text-align:center;font-size:10px;color:#8B8677;}
+  .phname{border:none;background:transparent;font:inherit;font-weight:800;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:#fff;width:82%;padding:1px 2px;}
+  .phname:focus{outline:none;border-bottom:1.5px solid var(--amber);}
+  .msname{border:none;background:transparent;font:inherit;font-weight:600;color:var(--orange);width:88%;padding:1px 2px;}
+  .msname:focus{outline:none;border-bottom:1.5px solid var(--amber);}
+  .gaddrow{background:none;border:1px dashed var(--line);color:#8B8677;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;padding:3px 10px;margin:4px 0;}
+  .gaddrow:hover{border-color:var(--navy);color:var(--navy);}
+
+  /* Tab 4: gantt */
+  table.gantt{border-collapse:collapse;width:100%;min-width:1150px;background:#fff;font-size:11.5px;}
+  table.gantt th{background:var(--navy);color:#fff;padding:8px 8px;font-size:10.5px;font-weight:600;border:1px solid var(--navy-2);text-align:center;line-height:1.3;}
+  table.gantt th.wk{min-width:74px;}
+  table.gantt th.wk small{display:block;font-weight:400;color:#B9C2D4;font-size:9px;letter-spacing:.3px;}
+  table.gantt td{border:1px solid #EEEAE0;padding:6px 8px;vertical-align:middle;background:#FFFDF7;}
+  table.gantt tr.phase td{background:var(--navy);color:#fff;font-weight:800;font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;padding:7px 10px;border-color:var(--navy-2);}
+  table.gantt tr.phase td .pnum{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--amber);color:var(--navy);font-size:9.5px;margin-right:8px;}
+  table.gantt td.taskname{min-width:250px;font-weight:600;color:var(--navy);}
+  table.gantt td.taskname .ttools{font-weight:400;font-size:10px;color:#8B8677;display:block;margin-top:1px;}
+  table.gantt td.taskname .ttools span{cursor:pointer;text-decoration:underline dotted;}
+  table.gantt td.taskname .ttools span:hover{color:var(--orange);}
+  table.gantt td.owner input{border:none;border-bottom:1px dashed #B9B4A6;background:transparent;font:inherit;font-size:11px;width:92px;padding:1px 2px;}
+  table.gantt td.owner input:focus{outline:none;border-bottom-color:var(--amber);}
+  table.gantt td.status{text-align:center;}
+  .stbtn{border:none;border-radius:10px;font-size:9.5px;font-weight:800;letter-spacing:.4px;cursor:pointer;padding:3px 10px;}
+  .stbtn.st0{background:var(--none-bg);color:#8B8677;}
+  .stbtn.st1{background:var(--part-bg);color:#9A5200;}
+  .stbtn.st2{background:var(--good-bg);color:var(--good);}
+  table.gantt td.wkcell{padding:4px 2px;position:relative;height:30px;}
+  .gbar{position:absolute;top:6px;bottom:6px;left:2px;right:2px;border-radius:4px;background:linear-gradient(90deg,var(--orange),var(--amber));opacity:.9;}
+  .gbar.done{background:var(--good);}
+  .gbar.prog{background:repeating-linear-gradient(45deg,var(--amber),var(--amber) 6px,var(--orange) 6px,var(--orange) 12px);}
+  .gbar.startcap{border-radius:4px 0 0 4px;left:2px;right:0;}
+  .gbar.midcap{border-radius:0;left:0;right:0;}
+  .gbar.endcap{border-radius:0 4px 4px 0;left:0;right:2px;}
+  .gms{position:absolute;top:50%;left:50%;width:13px;height:13px;background:var(--navy);border:2px solid var(--amber);transform:translate(-50%,-50%) rotate(45deg);}
+  table.gantt tr.msrow td{background:#FCFBF8;}
+  table.gantt tr.msrow td.taskname{color:var(--orange);}
+
+
+
+  /* ---------- admin panel ---------- */
+  #adminPanel{position:fixed;inset:0;z-index:900;display:none;align-items:flex-start;justify-content:center;background:rgba(15,22,38,.78);backdrop-filter:blur(4px);overflow-y:auto;padding:40px 16px;}
+  #adminPanel.show{display:flex;}
+  .ad-card{width:min(860px,100%);background:var(--paper);border-radius:14px;border-top:5px solid var(--orange);padding:26px 30px 30px;box-shadow:0 30px 80px rgba(0,0,0,.5);}
+  .ad-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+  .ad-head h2{font-size:20px;color:var(--navy);}
+  .ad-head .lp-eyebrow{margin-bottom:4px;}
+  .ad-close{background:none;border:none;font-size:20px;color:#8B8677;cursor:pointer;padding:4px 8px;border-radius:6px;}
+  .ad-close:hover{color:var(--orange);background:var(--gap-bg);}
+  .ad-new{display:flex;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+  .ad-new input{flex:1;min-width:240px;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;font-size:13px;}
+  .ad-new input:focus{outline:none;border-color:var(--amber);}
+  .ad-err{min-height:18px;color:var(--orange);font-size:12px;font-weight:700;margin:4px 0 8px;}
+  .ad-ws{background:#fff;border:1px solid var(--line);border-radius:10px;margin-top:12px;overflow:hidden;}
+  .ad-ws-head{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;}
+  .ad-ws-head:hover{background:#FCFBF8;}
+  .ad-ws-head .nm{font-weight:800;color:var(--navy);font-size:14px;flex:1;}
+  .ad-ws-head .meta{font-size:11px;color:#8B8677;font-weight:600;}
+  .ad-ws-body{display:none;border-top:1px solid var(--line);padding:14px 16px;background:#FCFBF8;}
+  .ad-ws.open .ad-ws-body{display:block;}
+  .ad-mem{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed #E6E2D8;font-size:12.5px;}
+  .ad-mem .em{flex:1;font-weight:600;color:var(--navy);}
+  .ad-mem .rl{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:var(--part-bg);color:#9A5200;border-radius:10px;padding:2px 9px;}
+  .ad-mem .rl.owner{background:var(--good-bg);color:var(--good);}
+  .ad-add{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .ad-add input{flex:1;min-width:200px;border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;font-size:12px;}
+  .ad-add select{border:1.5px solid var(--line);border-radius:6px;padding:8px;font:inherit;font-size:12px;background:#fff;}
+  .ad-actions{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+  .ad-hint{font-size:11px;color:#8B8677;margin-top:10px;line-height:1.5;}
+  @media print{#adminPanel{display:none !important;}}
+
+  
+/* ---------- provider admin panel ---------- */
+let isAdmin = false, adOpenWs = null;
+
+async function checkAdmin(){
+  try{
+    const {data} = await sb.rpc("amtoolkit_is_admin");
+    isAdmin = data === true;
+  }catch(e){ isAdmin = false; }
+  const b = document.getElementById("adminBtn");
+  if(b) b.style.display = isAdmin ? "inline-block" : "none";
+}
+function openAdmin(){ document.getElementById("adminPanel").classList.add("show"); adRefresh(); }
+function closeAdmin(){ document.getElementById("adminPanel").classList.remove("show"); fetchWorkspaces(); }
+function adError(msg){ document.getElementById("adErr").textContent = msg||""; }
+
+async function adRefresh(){
+  adError("");
+  const {data, error} = await sb.rpc("amtoolkit_admin_list_workspaces");
+  if(error){ adError(error.message); return; }
+  const list = document.getElementById("adList");
+  list.innerHTML = (data||[]).map(w=>`
+    <div class="ad-ws${adOpenWs===w.id?' open':''}" id="adws-${w.id}">
+      <div class="ad-ws-head" onclick="adToggleWs('${w.id}')">
+        <span class="nm">${esc(w.name)}</span>
+        <span class="meta">${w.member_count} member${w.member_count==1?"":"s"}</span>
+        <span class="meta">${w.last_activity ? "last activity "+new Date(w.last_activity).toLocaleDateString() : "no activity"}</span>
+      </div>
+      <div class="ad-ws-body" id="adbody-${w.id}"></div>
+    </div>`).join("");
+  if(adOpenWs) adLoadMembers(adOpenWs);
+}
+function adToggleWs(id){
+  adOpenWs = (adOpenWs===id) ? null : id;
+  adRefresh();
+}
+async function adLoadMembers(ws){
+  const body = document.getElementById("adbody-"+ws);
+  if(!body) return;
+  const {data, error} = await sb.rpc("amtoolkit_admin_list_members",{ws});
+  if(error){ body.innerHTML = `<div class="ad-err">${esc(error.message)}</div>`; return; }
+  const rows = (data||[]).map(m=>`
+    <div class="ad-mem">
+      <span class="em">${esc(m.email)}</span>
+      <span class="rl ${m.role}">${m.role}</span>
+      <button class="del" style="margin:0;" title="Remove member" onclick="adRemoveMember('${ws}','${esc(m.email)}')">✕</button>
+    </div>`).join("") || '<div class="ad-hint">No members yet.</div>';
+  body.innerHTML = `
+    ${rows}
+    <div class="ad-add">
+      <input id="adEmail-${ws}" type="email" placeholder="user email (must already exist in Authentication → Users)">
+      <select id="adRole-${ws}"><option value="member">member</option><option value="owner">owner</option></select>
+      <button class="smallbtn" onclick="adAddMember('${ws}')">Add member</button>
+    </div>
+    <div class="ad-actions">
+      <button class="smallbtn" onclick="adRename('${ws}')">Rename workspace</button>
+      <button class="smallbtn" style="border-color:var(--orange);color:var(--orange);" onclick="adDelete('${ws}')">Delete workspace</button>
+    </div>
+    <div class="ad-hint">To onboard a new customer user: create their account in Supabase Dashboard → Authentication → Users (Invite or Create user), then add their email here. Removing a member revokes their access immediately; deleting a workspace permanently removes all its data.</div>`;
+}
+async function adCreateWs(){
+  const inp = document.getElementById("adNewName");
+  const {data, error} = await sb.rpc("amtoolkit_admin_create_workspace",{ws_name: inp.value});
+  if(error){ adError(error.message); return; }
+  inp.value = ""; adOpenWs = data; adRefresh();
+}
+async function adAddMember(ws){
+  const em = document.getElementById("adEmail-"+ws).value;
+  const rl = document.getElementById("adRole-"+ws).value;
+  const {error} = await sb.rpc("amtoolkit_admin_add_member",{ws, member_email:em, member_role:rl});
+  if(error){ adError(error.message); return; }
+  adError(""); adRefresh();
+}
+async function adRemoveMember(ws, em){
+  if(!confirm("Remove "+em+" from this workspace? Their access ends immediately.")) return;
+  const {error} = await sb.rpc("amtoolkit_admin_remove_member",{ws, member_email:em});
+  if(error){ adError(error.message); return; }
+  adRefresh();
+}
+async function adRename(ws){
+  const nm = prompt("New workspace name:");
+  if(!nm) return;
+  const {error} = await sb.rpc("amtoolkit_admin_rename_workspace",{ws, ws_name:nm});
+  if(error){ adError(error.message); return; }
+  adRefresh();
+}
+async function adDelete(ws){
+  if(!confirm("DELETE this workspace and ALL its data permanently? This cannot be undone.")) return;
+  if(!confirm("Are you absolutely sure? All matrix scores, plans and measures in this workspace will be lost.")) return;
+  const {error} = await sb.rpc("amtoolkit_admin_delete_workspace",{ws});
+  if(error){ adError(error.message); return; }
+  adOpenWs = null; adRefresh();
+}
+
+/* ---------- login page ---------- */
+  #loginPage{
+    position:fixed;inset:0;z-index:1000;display:none;
+    align-items:center;justify-content:center;
+    background:
+      radial-gradient(1100px 600px at 78% -10%, #2E3D5C 0%, transparent 55%),
+      radial-gradient(900px 700px at -10% 110%, #23304B 0%, transparent 55%),
+      linear-gradient(160deg, #141D30 0%, #1A2539 55%, #0F1626 100%);
+    overflow:hidden;
+  }
+  #loginPage.show{display:flex;}
+  .lp-grid{
+    position:absolute;inset:0;opacity:.5;
+    background-image:
+      linear-gradient(rgba(185,194,212,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(185,194,212,.055) 1px, transparent 1px);
+    background-size:44px 44px;
+    mask-image:radial-gradient(closest-side at 50% 45%, #000 30%, transparent 100%);
+    -webkit-mask-image:radial-gradient(closest-side at 50% 45%, #000 30%, transparent 100%);
+  }
+  .lp-glow{
+    position:absolute;width:640px;height:640px;border-radius:50%;
+    background:radial-gradient(circle, rgba(205,59,0,.20) 0%, rgba(223,108,1,.08) 40%, transparent 70%);
+    top:-220px;right:-160px;pointer-events:none;
+    animation:lpDrift 14s ease-in-out infinite alternate;
+  }
+  @keyframes lpDrift{from{transform:translate(0,0);}to{transform:translate(-60px,50px);}}
+  .lp-card{
+    position:relative;width:min(430px, calc(100vw - 40px));
+    background:rgba(20,28,46,.72);
+    border:1px solid rgba(185,194,212,.16);
+    border-top:4px solid var(--orange);
+    border-radius:14px;
+    padding:38px 40px 30px;
+    box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.2);
+    backdrop-filter:blur(10px);
+  }
+  .lp-eyebrow{font-size:10.5px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);font-weight:800;margin-bottom:10px;}
+  .lp-title{color:#fff;font-size:26px;line-height:1.22;font-weight:700;letter-spacing:.3px;}
+  .lp-rule{width:56px;height:3px;background:linear-gradient(90deg,var(--orange),var(--amber));border-radius:2px;margin:14px 0 8px;}
+  .lp-sub{color:#8FA0BF;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;font-weight:600;margin-bottom:24px;}
+  .lp-form label{display:block;font-size:10.5px;letter-spacing:1.8px;text-transform:uppercase;color:#8FA0BF;font-weight:800;margin:14px 0 6px;}
+  .lp-form input{
+    width:100%;background:rgba(15,22,38,.85);border:1px solid rgba(185,194,212,.22);
+    border-radius:8px;color:#fff;font:inherit;font-size:14px;padding:11px 13px;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .lp-form input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(223,108,1,.18);}
+  .lp-btn{
+    width:100%;margin-top:22px;background:linear-gradient(135deg,var(--orange),var(--amber));
+    border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:800;letter-spacing:.8px;
+    text-transform:uppercase;padding:13px;cursor:pointer;
+    box-shadow:0 8px 22px rgba(205,59,0,.35);
+    transition:transform .12s, box-shadow .12s, filter .12s;
+  }
+  .lp-btn:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(205,59,0,.45);filter:brightness(1.05);}
+  .lp-btn:active{transform:translateY(0);}
+  .lp-err{min-height:16px;color:#FF9C7A;font-size:11.5px;font-weight:600;margin-top:10px;text-align:center;}
+  .lp-ws{
+    display:block;width:100%;text-align:left;background:rgba(15,22,38,.85);
+    border:1px solid rgba(185,194,212,.22);border-left:4px solid var(--amber);
+    border-radius:8px;color:#fff;font:inherit;font-size:13.5px;font-weight:700;
+    padding:12px 14px;margin-top:10px;cursor:pointer;transition:border-color .12s, transform .12s;
+  }
+  .lp-ws:hover{border-color:var(--amber);transform:translateX(3px);}
+  .lp-foot{margin-top:26px;padding-top:14px;border-top:1px solid rgba(185,194,212,.12);color:#5C6C8A;font-size:10px;letter-spacing:1px;text-transform:uppercase;text-align:center;}
+  @media print{#loginPage{display:none !important;}}
+  @media (max-width:480px){.lp-card{padding:28px 22px 22px;}.lp-title{font-size:22px;}}
+
+  /* pillar tooltips */
+  .tip{position:relative;cursor:help;}
+  .tip .tipbox{
+    display:none;position:absolute;z-index:50;top:100%;left:50%;transform:translateX(-50%);
+    margin-top:8px;width:250px;background:#fff;color:var(--ink);text-align:left;
+    border:1px solid var(--line);border-top:4px solid var(--amber);border-radius:8px;
+    padding:10px 12px;font-size:11.5px;font-weight:400;line-height:1.5;
+    box-shadow:0 8px 22px rgba(26,37,57,.22);text-transform:none;letter-spacing:0;
+  }
+  .tip .tipbox b{color:var(--orange);display:block;margin-bottom:3px;font-size:11px;letter-spacing:.5px;text-transform:uppercase;}
+  .tip:hover .tipbox{display:block;}
+  thead th.tip:last-of-type .tipbox, thead th.tip:nth-last-child(-n+3) .tipbox{left:auto;right:0;transform:none;}
+  @media print{.tipbox{display:none !important;}}
+
+  /* Tab 2: reference */
+  .refgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;}
+  .refcard{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .refcard h4{background:var(--navy);color:#fff;font-size:12px;padding:9px 14px;display:flex;align-items:center;gap:8px;}
+  .refcard h4 .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--amber);color:var(--navy);font-weight:800;font-size:10.5px;flex:none;}
+  .refrow{display:flex;border-top:1px solid #EEEAE0;font-size:11.5px;line-height:1.5;}
+  .refrow .tag{flex:0 0 92px;padding:8px 10px;font-weight:800;font-size:10px;letter-spacing:.5px;display:flex;align-items:flex-start;}
+  .refrow.r1 .tag{background:var(--gap-bg);color:var(--orange);} .refrow.r2 .tag{background:var(--part-bg);color:#9A5200;}
+  .refrow.r3 .tag{background:var(--good-bg);color:var(--good);} .refrow.r0 .tag{background:var(--none-bg);color:#8B8677;}
+  .refrow .txt{padding:8px 12px 8px 4px;color:#3E4356;flex:1;}
+  .refrow .tools{border-top:1px dotted var(--line);}
+  .refrow .toolchip{background:#FCFBF8;border-color:var(--line);}
+
+  /* Tab 3: templates workspace */
+  .tplayout{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start;}
+  .tplnav{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;position:sticky;top:12px;max-height:calc(100vh - 40px);overflow-y:auto;}
+  .tplsearch{width:100%;border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;font-size:12.5px;margin-bottom:10px;}
+  .tplsearch:focus{outline:none;border-color:var(--amber);}
+  .allbtn{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:12px;font-weight:700;color:var(--navy);cursor:pointer;margin-bottom:10px;}
+  .allbtn:hover{background:var(--navy);color:#fff;}
+  .navgrp{border:1px solid var(--line);border-radius:8px;margin-bottom:7px;overflow:hidden;}
+  .navgrp > button{
+    width:100%;display:flex;align-items:center;gap:8px;background:#FCFBF8;border:none;
+    padding:8px 10px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--navy);cursor:pointer;text-align:left;
+  }
+  .navgrp > button .gnum{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:var(--amber);color:var(--navy);font-size:10px;flex:none;}
+  .navgrp > button .count{margin-left:auto;font-weight:600;color:#8B8677;font-size:10.5px;}
+  .navgrp > button .caret{transition:transform .15s;font-size:10px;color:#8B8677;}
+  .navgrp.open > button .caret{transform:rotate(90deg);}
+  .navgrp .items{display:none;border-top:1px solid #EEEAE0;}
+  .navgrp.open .items{display:block;}
+  .navgrp .items a{display:block;font-size:11.5px;font-weight:600;color:var(--navy);text-decoration:none;padding:5px 10px 5px 14px;line-height:1.4;border-left:3px solid transparent;}
+  .navgrp .items a:hover{background:var(--paper);}
+  .navgrp .items a.sel{background:var(--navy);color:#fff;border-left-color:var(--amber);}
+  .tplview{min-width:0;}
+
+  /* gallery landing */
+  .gallery h2{font-size:15px;letter-spacing:1.5px;text-transform:uppercase;color:var(--navy);border-bottom:3px solid var(--orange);display:inline-block;padding-bottom:5px;margin:6px 0 12px;}
+  .gallery h2:not(:first-child){margin-top:26px;}
+  .gcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+  .gcard{
+    background:#fff;border:1px solid var(--line);border-left:4px solid var(--amber);
+    border-radius:8px;padding:11px 13px;cursor:pointer;transition:box-shadow .12s, transform .12s;
+  }
+  .gcard:hover{box-shadow:0 4px 12px rgba(26,37,57,.13);transform:translateY(-1px);border-left-color:var(--orange);}
+  .gcard h4{font-size:12.5px;color:var(--navy);margin-bottom:4px;line-height:1.35;}
+  .gcard p{font-size:10.5px;color:#7A7566;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+
+  /* template card */
+  .tplcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:22px 26px;box-shadow:0 2px 8px rgba(26,37,57,.05);}
+  .crumbbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .crumb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .backbtn{background:none;border:1.5px solid var(--line);color:var(--navy);border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;padding:5px 12px;}
+  .backbtn:hover{border-color:var(--navy);background:var(--navy);color:#fff;}
+  .pillbadge{background:var(--navy);color:#fff;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:3px 11px;}
+  .navarrows{display:flex;gap:6px;}
+  .navarrows button{background:#FCFBF8;border:1.5px solid var(--line);border-radius:6px;font-size:11.5px;font-weight:700;color:var(--navy);cursor:pointer;padding:5px 11px;}
+  .navarrows button:hover:not(:disabled){border-color:var(--navy);background:var(--navy);color:#fff;}
+  .navarrows button:disabled{opacity:.35;cursor:default;}
+  .tplhead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+  .tplcard h3{font-size:19px;color:var(--navy);}
+  .purpose{font-size:12.5px;color:#5C5A50;margin:6px 0 14px;line-height:1.5;max-width:880px;}
+  .hdrgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 18px;margin-bottom:14px;background:#FCFBF8;border:1px solid #EEEAE0;border-radius:8px;padding:12px 14px;}
+  .hf{display:flex;align-items:center;gap:8px;font-size:11px;}
+  .hf label{font-weight:700;color:var(--navy);white-space:nowrap;}
+  .hf input{flex:1;border:none;border-bottom:1.5px solid #B9B4A6;background:transparent;font:inherit;font-size:11.5px;padding:2px 4px;}
+  .hf input:focus{outline:none;border-bottom-color:var(--amber);background:#FFFDF7;}
+  .guide{background:#F2F5FB;border-left:4px solid var(--amber);border-radius:0 8px 8px 0;padding:9px 14px 9px 28px;font-size:11.5px;line-height:1.55;color:#3E4356;margin-bottom:14px;}
+  .guide li{margin-bottom:3px;}
+  .tplscroll{overflow-x:auto;}
+  table.tpl{border-collapse:collapse;width:100%;font-size:11.5px;}
+  table.tpl th{background:var(--navy);color:#fff;padding:7px 8px;text-align:left;font-weight:600;font-size:10.5px;line-height:1.3;border:1px solid var(--navy-2);position:sticky;top:0;}
+  table.tpl td{border:1px solid var(--line);padding:8px;background:#FFFDF7;min-width:70px;}
+  table.tpl td:focus{outline:2px solid var(--amber);outline-offset:-2px;background:#fff;}
+  table.tpl tbody tr:nth-child(even) td{background:#FCFAF3;}
+  .rowbtns{margin-top:10px;display:flex;gap:8px;}
+  .smallbtn{background:none;border:1.5px solid var(--navy);color:var(--navy);border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;padding:5px 12px;}
+  .smallbtn:hover{background:var(--navy);color:#fff;}
+
+  @media print{
+    *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+    @page{margin:12mm;}
+    header{padding:16px 0 12px;border-bottom:5px solid var(--orange);}
+    header p{color:#3E4A63;}
+    header .eyebrow{color:var(--amber);}
+    header{background:var(--navy) !important;}
+
+    .btn,.del,.notebtn,.useact,.tabs,.tplnav,.rowbtns,.smallbtn,.tplsearch{display:none !important;}
+    body{background:#fff;}
+    .panel{display:none !important;}
+    .panel.active{display:block !important;}
+    .tplayout{display:block;}
+    .notepanel{display:block !important;}
+    .notearea{resize:none;min-height:0;}
+    .notearea:placeholder-shown{display:none !important;}
+    .actions:not(.hasnote){display:none;}
+  }
+  @media (max-width:900px){
+    .tplayout{grid-template-columns:1fr;}
+    .tplnav{position:static;max-height:none;}
+  }
+  @media (max-width:700px){
+    header{padding:18px 18px 0;} .wrap{padding:16px;}
+    .hdrgrid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginPage">
+  <div class="lp-grid"></div>
+  <div class="lp-glow"></div>
+  <div class="lp-card">
+    <div class="lp-eyebrow">Asset Performance Improvement</div>
+    <h1 class="lp-title">Asset Management<br>Performance Toolkit</h1>
+    <div class="lp-rule"></div>
+    <p class="lp-sub">Prioritise · Assess · Improve · Sustain</p>
+    <div class="lp-form">
+      <label>Email</label>
+      <input id="lpEmail" type="email" autocomplete="username" placeholder="you@company.com">
+      <label>Password</label>
+      <input id="lpPass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')lpSignIn()">
+      <button class="lp-btn" onclick="lpSignIn()">Sign in</button>
+      <div class="lp-err" id="lpErr"></div>
+    </div>
+    <div class="lp-form" id="lpSetPass" style="display:none;">
+      <p style="color:#B9C2D4;font-size:12.5px;line-height:1.55;margin-bottom:4px;" id="lpSetPassMsg">Welcome! You've been invited to the toolkit. Choose a password to finish setting up your account.</p>
+      <label>New password</label>
+      <input id="lpNewPass" type="password" autocomplete="new-password" placeholder="minimum 8 characters">
+      <label>Confirm password</label>
+      <input id="lpNewPass2" type="password" autocomplete="new-password" placeholder="repeat password" onkeydown="if(event.key==='Enter')lpSetPassword()">
+      <button class="lp-btn" onclick="lpSetPassword()">Set password & continue</button>
+      <div class="lp-err" id="lpSetErr"></div>
+    </div>
+    <div class="lp-form" id="lpWsPick" style="display:none;">
+      <label>Select workspace</label>
+      <div id="lpWsList"></div>
+    </div>
+    <div class="lp-foot">Seven-pillar asset improvement methodology · Secure cloud workspace</div>
+  </div>
+</div>
+
+<div id="adminPanel">
+  <div class="ad-card">
+    <div class="ad-head">
+      <div><div class="lp-eyebrow">Provider Administration</div><h2>Workspaces & Members</h2></div>
+      <button class="ad-close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="ad-new">
+      <input id="adNewName" placeholder="New workspace name (e.g. Customer Co Pty Ltd)">
+      <button class="btn" onclick="adCreateWs()">+ Create Workspace</button>
+    </div>
+    <div class="ad-err" id="adErr"></div>
+    <div id="adList"></div>
+  </div>
+</div>
+
+<header>
+  <div class="eyebrow">Asset Performance Improvement</div>
+  <h1>Asset Management Performance Toolkit</h1>
+  <p>Assess your assets against the seven pillars in the Improvement Matrix, work from the pillar measures library, and complete the linked tool templates — all in one place. Everything is editable on screen and printable per tab. <span id="saveStatus" style="color:#7FD1A0;font-weight:700;"></span></p>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+    <span id="authBar" style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <span id="authSignedIn" style="display:none;gap:8px;align-items:center;">
+        <span id="wsName" style="font-size:11px;color:var(--amber);font-weight:800;letter-spacing:.5px;"></span>
+        <button class="hbtn" id="wsSwitchBtn" style="display:none;" onclick="showWsPicker()">Switch workspace</button>
+        <span id="authUser" style="font-size:11px;color:#7FD1A0;font-weight:700;"></span>
+        <button class="hbtn" id="adminBtn" style="display:none;border-color:var(--amber);color:var(--amber);" onclick="openAdmin()">⚙ Admin</button>
+        <button class="hbtn" onclick="signOut()">Sign out</button>
+      </span>
+    </span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-panel="p-pareto" onclick="switchTab(this)">1 · Pareto Downtime</button>
+    <button class="tab" data-panel="p-halden" onclick="switchTab(this)">2 · Halden Dashboard</button>
+    <button class="tab" data-panel="p-matrix" onclick="switchTab(this)">3 · Improvement Matrix</button>
+    <button class="tab" data-panel="p-actions" onclick="switchTab(this)">4 · Pillar Measures</button>
+    <button class="tab" data-panel="p-templates" onclick="switchTab(this)">5 · Tool Templates</button>
+    <button class="tab" data-panel="p-plan" onclick="switchTab(this)">6 · Project Plan</button>
+    <button class="tab" data-panel="p-actionplans" onclick="switchTab(this)">7 · Action Measures</button>
+  </div>
+</header>
+
+<!-- TAB 1: MATRIX -->
+<div class="panel" id="p-matrix">
+<div class="wrap">
+  <div class="toolbar">
+    <div class="legend">
+      <span class="chip"><span class="dot s3"></span>In Place (3)</span>
+      <span class="chip"><span class="dot s2"></span>Partial (2)</span>
+      <span class="chip"><span class="dot s1"></span>Gap (1)</span>
+      <span class="chip"><span class="dot s0"></span>Not Assessed (0)</span>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn ghost" onclick="toggleAllNotes()">Show / Hide All Notes</button>
+      <button class="btn ghost" onclick="window.print()">Save as PDF</button>
+      <button class="btn ghost" onclick="exportWorkbook()">Save to Excel</button>
+      <button class="btn" onclick="addAsset()">+ Add Asset</button>
+    </div>
+  </div>
+  <div class="hint">Click a status to cycle it. Open “Notes &amp; Actions” for suggested actions and tools per rating — clicking a tool chip jumps to its editable template in Tab 4.</div>
+  <div class="matrix-scroll">
+    <table class="mx" id="matrix">
+      <thead>
+        <tr>
+          <th>Asset / Equipment</th>
+          <th class="tip"><span class="num">1</span><br>Identify current issues &amp;<br>potential risks<span class="tipbox" data-def="0"></span></th>
+          <th class="tip"><span class="num">2</span><br>Establish quick recovery<br>strategies<span class="tipbox" data-def="1"></span></th>
+          <th class="tip"><span class="num">3</span><br>Identify &amp; establish<br>back-up strategies<span class="tipbox" data-def="2"></span></th>
+          <th class="tip"><span class="num">4</span><br>Identify &amp; stock<br>critical spares<span class="tipbox" data-def="3"></span></th>
+          <th class="tip"><span class="num">5</span><br>Develop &amp; schedule the right<br>maintenance tactics<span class="tipbox" data-def="4"></span></th>
+          <th class="tip"><span class="num">6</span><br>Develop<br>FMEA’s<span class="tipbox" data-def="5"></span></th>
+          <th class="tip"><span class="num">7</span><br>Establish skills matrix &amp; train<br>people to maintain assets<span class="tipbox" data-def="6"></span></th>
+          <th>Readiness<br>Score</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot><tr id="footRow"></tr></tfoot>
+    </table>
+  </div>
+  <div class="cards">
+    <div class="card"><h3>Overall Readiness</h3><div class="big" id="overallPct">—</div><p id="overallNote">Score cells to see fleet-wide readiness.</p></div>
+    <div class="card alert"><h3>Weakest Pillar</h3><div class="big" id="weakPillar" style="font-size:17px;line-height:1.4;">—</div><p>The pillar with the lowest average score across all assets — your highest-leverage improvement area.</p></div>
+    <div class="card alert"><h3>Highest-Risk Asset</h3><div class="big" id="weakAsset" style="font-size:17px;line-height:1.4;">—</div><p>The asset with the lowest readiness score — prioritise it for review.</p></div>
+  </div>
+</div>
+</div>
+
+<!-- TAB 2: ACTION MEASURES -->
+<div class="panel" id="p-actions">
+<div class="wrap">
+  <div class="toolbar">
+    <div class="hint" style="margin:0;">Pillar Measures — every pillar’s recommended measures across the four rating levels, with linked tools. Click any tool chip to open its editable template in Tab 5.</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn ghost" onclick="window.print()">Save as PDF</button>
+      <button class="btn ghost" onclick="exportWorkbook()">Save to Excel</button>
+    </div>
+  </div>
+  <div class="refgrid" id="refgrid"></div>
+</div>
+</div>
+
+
+
+
+<!-- TAB 2: HALDEN DASHBOARD -->
+<div class="panel" id="p-halden">
+<div class="wrap">
+  <div class="toolbar">
+    <div class="hint" style="margin:0;">Halden Line downtime intelligence dashboard. Update it by uploading the downtime Excel export — expected columns: <b>CW</b>, <b>Fault</b>, <b>Downtime</b> (min), <b>Occurrences</b>, <b>Asset</b>. <b>All sheets are read and combined</b> — one sheet per calendar week works (CW is taken from the sheet name, e.g. “CW 30”, if the column is missing). Header names are matched flexibly.</div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span id="haldenStatus" style="font-size:11.5px;color:#8B8677;font-weight:600;"></span>
+      <button class="btn" onclick="document.getElementById('haldenFile').click()">⬆ Upload Excel data</button>
+      <input type="file" id="haldenFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="haldenUpload(this)">
+    </div>
+  </div>
+  <iframe id="haldenFrame" style="width:100%;height:2350px;border:1px solid var(--line);border-radius:10px;background:#0D1420;"></iframe>
+</div>
+</div>
+
+<!-- TAB 2: PARETO DOWNTIME -->
+<div class="panel active" id="p-pareto">
+<div class="wrap">
+  <div class="toolbar">
+    <div class="hint" style="margin:0;">Enter downtime per asset over your chosen period — the table auto-ranks by impact and the chart shows the cumulative Pareto curve. Assets inside the 80% band (highlighted) are your vital few: carry them into the Improvement Matrix (Tab 2) and start there.</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn ghost" onclick="pullAssetsFromMatrix()">Pull assets from Matrix</button>
+      <button class="btn ghost" onclick="window.print()">Save as PDF</button>
+      <button class="btn ghost" onclick="exportWorkbook()">Save to Excel</button>
+      <button class="btn" onclick="addParetoRow()">+ Add Asset</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+    <label style="font-size:12px;font-weight:700;color:var(--navy);">Analysis period:</label>
+    <input id="paretoPeriod" placeholder="e.g. Jan – Jun 2026" style="border:1.5px solid var(--line);border-radius:6px;padding:6px 10px;font:inherit;font-size:12px;width:190px;">
+    <label style="font-size:12px;font-weight:700;color:var(--navy);margin-left:8px;">Rank by:</label>
+    <select id="paretoMode" onchange="renderPareto()" style="border:1.5px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:12px;">
+      <option value="dt">Downtime (min)</option>
+      <option value="ev">No. of events</option>
+    </select>
+  </div>
+
+  <div class="pargrid">
+    <div class="matrix-scroll"><table class="ap pareto" id="paretoTable"></table></div>
+    <div class="parchartcard">
+      <h3 id="parChartTitle">Downtime Pareto</h3>
+      <div id="paretoChart"></div>
+      <div class="parlegend">
+        <span><i style="background:var(--orange);"></i>Vital few (≤80% cum.)</span>
+        <span><i style="background:#C8C2B4;"></i>Remaining assets</span>
+        <span><i style="background:var(--navy);border-radius:6px;height:3px;margin-top:5px;"></i>Cumulative %</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- TAB 4: PROJECT PLAN -->
+<div class="panel" id="p-plan">
+<div class="wrap">
+  <div class="toolbar">
+    <div>
+      <div class="hint" style="margin:0 0 4px;">An improvement programme following the seven pillars in matrix order (default 8 weeks — extend the timeline with the + control): mobilise → Pillar 1 through Pillar 7 → re-assess. Milestones M2–M8 close out each pillar in sequence. Edit owners, status and dates inline.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <label style="font-size:12px;font-weight:700;color:var(--navy);">Project start date:</label>
+        <input type="date" id="planStart" style="border:1.5px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:12px;" onchange="renderPlan()">
+        <label style="font-size:12px;font-weight:700;color:var(--navy);margin-left:10px;">Timeline weeks:</label>
+        <span style="display:inline-flex;align-items:center;gap:6px;">
+          <button class="smallbtn" onclick="changeWeeks(-1)">−</button>
+          <b id="weeksLabel" style="font-size:13px;color:var(--navy);min-width:22px;text-align:center;">8</b>
+          <button class="smallbtn" onclick="changeWeeks(1)">+</button>
+        </span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn ghost" onclick="window.print()">Save as PDF</button>
+      <button class="btn ghost" onclick="exportWorkbook()">Save to Excel</button>
+    </div>
+  </div>
+
+  <div class="matrix-scroll" style="margin-bottom:22px;">
+    <table class="gantt" id="ganttTable"></table>
+  </div>
+
+  <div class="cards" style="margin-top:0;">
+    <div class="card"><h3>Plan Progress</h3><div class="big" id="planPct">0%</div><p id="planNote">Mark tasks as In Progress or Done in the Status column to track delivery.</p></div>
+    <div class="card"><h3>Milestones</h3><div id="milestoneList" style="font-size:12.5px;line-height:1.9;color:var(--navy);font-weight:600;"></div></div>
+    <div class="card alert"><h3>Sequence Logic</h3><p style="margin-top:0;">The plan follows the matrix pillar order 1→7: identify issues and risks first, then build recovery and back-up capability, stock the critical spares, develop and schedule the right maintenance tactics, formalise FMEA’s, and train the people on everything developed. Week 1 mobilises and baselines; Week 8 re-runs the matrix to measure improvement against that baseline.</p></div>
+  </div>
+</div>
+</div>
+
+
+<!-- TAB 5: ACTION PLANS -->
+<div class="panel" id="p-actionplans">
+<div class="wrap">
+  <div class="toolbar">
+    <div class="hint" style="margin:0;">Action Measures — the central log of problems and findings with countermeasures per pillar and asset. Feed it from matrix gaps, FMEA actions, drills and audits. Every cell is editable. Use the filter row under the headings to narrow the list.</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn ghost" onclick="window.print()">Save as PDF</button>
+      <button class="btn ghost" onclick="exportWorkbook()">Save to Excel</button>
+      <button class="btn" onclick="addActionRow()">+ Add Measure</button>
+    </div>
+  </div>
+  <div class="matrix-scroll">
+    <table class="ap" id="apTable"></table>
+  </div>
+  <div class="ap-filtersummary" id="apFilterSummary"></div>
+
+  <div class="tacard" id="apSummaryCard">
+    <h3 class="tahead">Action Measures Summary</h3>
+    <div id="apSummaryBody"></div>
+  </div>
+
+  <div class="tacard">
+    <div class="toolbar" style="margin-bottom:12px;">
+      <div>
+        <h3 class="tahead">Technical Availability (%)</h3>
+        <div class="hint" style="margin:4px 0 0;">Enter availability per period — the graph updates as you type. Periods below target show in orange, on/above target in green.</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <label style="font-size:12px;font-weight:700;color:var(--navy);">Target %:</label>
+        <input type="number" id="taTarget" min="0" max="100" step="0.5" value="90" style="border:1.5px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:12px;width:80px;" onchange="renderTA()">
+        <button class="btn" onclick="addTARow()">+ Add Period</button>
+      </div>
+    </div>
+    <div class="tagrid">
+      <div class="matrix-scroll"><table class="ap ta" id="taTable"></table></div>
+      <div id="taChart"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- TAB 3: TOOL TEMPLATES -->
+<div class="panel" id="p-templates">
+<div class="wrap">
+  <div class="tplayout">
+    <nav class="tplnav" id="tplnav">
+      <input class="tplsearch" id="tplsearch" placeholder="Search tools…" oninput="renderNav(this.value)">
+      <button class="allbtn" onclick="showGallery()">⌂ All tools overview</button>
+      <div id="navlist"></div>
+    </nav>
+    <div class="tplview" id="tplview"></div>
+  </div>
+</div>
+</div>
+
+<script>
+const GUIDANCE = [
+  [ /* 1. Issues & risks identified */
+    ["Schedule a risk identification workshop for this asset","Review breakdown history, downtime logs and operator feedback","Assign a risk owner and set an assessment date"],
+    ["Run a structured risk assessment (e.g. criticality analysis)","Capture known failure modes and operational risks in a risk register","Rank risks by likelihood × consequence and agree top 3 to address"],
+    ["Close out unassessed risk areas (safety, quality, environmental)","Validate the risk register with operators and maintenance","Set a review cadence and link risks to mitigation actions"],
+    ["Review the risk register at set intervals (e.g. quarterly)","Update after every significant failure, change or modification","Track leading indicators to catch emerging risks early"]
+  ],
+  [ /* 2. Quick recovery strategies */
+    ["Identify the most likely failure scenarios for this asset","Establish current actual recovery time from recent breakdowns","Nominate an owner to develop recovery plans"],
+    ["Develop step-by-step recovery procedures for top failure modes","Define target Mean Time To Repair (MTTR) per scenario","Pre-stage tools, permits and isolation procedures for fast response"],
+    ["Test recovery procedures with a drill or simulation","Close gaps found in access, tooling, permits or documentation","Train all shifts on the recovery steps, not just day shift"],
+    ["Review MTTR performance against targets after each event","Refine procedures with lessons learned","Audit readiness of recovery kits and documentation periodically"]
+  ],
+  [ /* 3. Back-up strategies */
+    ["Determine what happens to production if this asset stops","Identify possible back-up options: redundancy, rerouting, hire, buffer stock","Assign an owner to evaluate feasibility and cost"],
+    ["Select and document the back-up strategy per critical failure","Establish agreements needed (rental contracts, alternative suppliers, bypass routes)","Quantify the cost of downtime vs cost of back-up to justify investment"],
+    ["Formalise and test the back-up: can it actually be activated in time?","Close contractual, technical or layout gaps preventing activation","Document activation triggers and decision authority"],
+    ["Periodically test or verify back-up availability","Review contracts and buffer levels annually","Update the strategy when production volumes or layouts change"]
+  ],
+  [ /* 4. Critical spare parts */
+    ["Identify which parts would stop the asset if unavailable","Check current stock holding and supplier lead times","Assign an owner to complete a critical spares analysis"],
+    ["Run a criticality-based spares analysis (lead time × impact × probability)","Set min/max levels for critical items and load into the inventory system","Negotiate consignment or guaranteed-availability agreements for long-lead items"],
+    ["Close gaps: procure missing critical spares or secure supplier commitments","Verify storage conditions, preservation and shelf-life management","Link spares to BOMs in the CMMS for fast retrieval"],
+    ["Cycle-count and audit critical spares regularly","Review obsolescence and supplier risk annually","Adjust holdings as failure rates and lead times change"]
+  ],
+  [ /* 5. Maintenance tactics */
+    ["List current maintenance activities for this asset (if any)","Gather failure history and manufacturer recommendations","Plan a tactic development session (PM/PdM/RTF decision)"],
+    ["Apply a structured method (e.g. RCM-lite / PM optimisation) to select tactics","Match each dominant failure mode to a tactic: preventive, predictive, or run-to-failure","Load selected tasks into the CMMS with frequencies and standards"],
+    ["Complete task lists: add missing inspections, lubrication and condition monitoring","Balance over- and under-maintenance using failure data","Define clear acceptance criteria for each task"],
+    ["Review tactic effectiveness with MTBF and cost trends","Shift from time-based to condition-based tasks where justified","Continuously remove non-value-adding tasks"]
+  ],
+  [ /* 6. FMEAs developed */
+    ["Prioritise this asset for FMEA based on criticality","Assemble a cross-functional team (operations, maintenance, engineering)","Gather drawings, failure history and process data as inputs"],
+    ["Facilitate the FMEA: functions, failure modes, effects, causes, current controls","Score severity, occurrence and detection to calculate RPN","Agree recommended actions for the highest RPN items"],
+    ["Complete missing sections and validate scores against real failure data","Implement and track the recommended actions to closure","Re-score RPN after actions to confirm risk reduction"],
+    ["Keep the FMEA live: update after failures, changes and modifications","Feed FMEA outputs into maintenance tactics and spares strategy","Review annually or after any significant event"]
+  ],
+  [ /* 7. Trained people */
+    ["Define the skills required to maintain this asset (mechanical, electrical, controls)","Map current team competence against those requirements","Assign responsibility for building the training plan"],
+    ["Develop a skills matrix and identify individual gaps","Plan training: OEM courses, on-the-job coaching, standard work instructions","Prioritise training for the highest-risk skill gaps first"],
+    ["Close remaining gaps and reduce single-person dependencies","Assess competence practically, not just by attendance","Cross-skill to ensure coverage across all shifts"],
+    ["Refresh training on a set cycle and after modifications","Keep the skills matrix current as people move","Capture expert knowledge in procedures before it walks out the door"]
+  ]
+];
+const TOOLS = [
+  [ /* 1. Identify current issues & potential risks */
+    ["Downtime / Breakdown Log"],
+    ["Risk Register","Risk Matrix (Likelihood x Consequence)"],
+    ["Risk Register","5 Whys"],
+    ["Risk Register","Downtime / Breakdown Log"]
+  ],
+  [ /* 2. Establish quick recovery strategies */
+    ["MTTR Baseline Analysis"],
+    ["Standard Operating Procedure (SOP)","Troubleshooting Guide / Decision Tree"],
+    ["Recovery Kit Audit Checklist","Standard Operating Procedure (SOP)"],
+    ["MTTR Baseline Analysis","Recovery Kit Audit Checklist"]
+  ],
+  [ /* 3. Identify & establish back-up strategies */
+    ["Single Point of Failure Analysis"],
+    ["Business Impact Analysis","Contingency Plan Template"],
+    ["Contingency Plan Template"],
+    ["Contingency Plan Template","Business Impact Analysis"]
+  ],
+  [ /* 4. Identify & stock critical spares */
+    ["Critical Spares Identification Checklist"],
+    ["Spares Criticality Analysis Matrix","Min/Max Level Calculator"],
+    ["Min/Max Level Calculator"],
+    ["Spares Criticality Analysis Matrix"]
+  ],
+  [ /* 5. Develop & schedule the right maintenance tactics */
+    ["Maintenance Task Inventory"],
+    ["RCM / RCM-lite Worksheet","PM Optimisation Template"],
+    ["PM Optimisation Template","CMMS Task Loading Sheet"],
+    ["PM Optimisation Template"]
+  ],
+  [ /* 6. Develop FMEA's */
+    ["FMEA Worksheet (AIAG / IEC 60812)"],
+    ["FMEA Worksheet (AIAG / IEC 60812)","RPN Scoring Tables"],
+    ["Action Tracker","RPN Scoring Tables"],
+    ["FMEA Worksheet (AIAG / IEC 60812)","Action Tracker"]
+  ],
+  [ /* 7. Establish skills matrix & train people */
+    ["Skills Matrix (ILU / 4-Level)"],
+    ["Skills Matrix (ILU / 4-Level)","Training Plan Template"],
+    ["Practical Competency Assessment","Training Plan Template"],
+    ["Skills Matrix (ILU / 4-Level)","Practical Competency Assessment"]
+  ]
+];
+const TEMPLATES = {"downtime-breakdown-log": {"name": "Downtime / Breakdown Log", "group": "1. Identify Current Issues & Potential Risks", "purpose": "Capture every stoppage so patterns, chronic losses and bad actors become visible.", "cols": ["Date", "Shift", "Asset", "Failure description", "Failure mode", "Downtime (min)", "Production lost", "Immediate cause", "Action taken", "Logged by"], "rows": 12, "guide": ["Log every stoppage over your threshold (e.g. 5 min).", "Review weekly: Pareto the downtime by asset and by failure mode."], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "risk-register": {"name": "Risk Register", "group": "1. Identify Current Issues & Potential Risks", "purpose": "Single live record of identified risks with ratings, owners and mitigation status.", "cols": ["ID", "Risk description", "Category (Safety/Prod/Qual/Env/Cost)", "Cause", "Likelihood (1-5)", "Consequence (1-5)", "Risk score", "Mitigation / control", "Owner", "Due date", "Status"], "rows": 10, "guide": ["Risk score = Likelihood x Consequence.", "Review at set cadence; close only with evidence of control effectiveness."], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "risk-matrix-likelihood-x-consequence": {"name": "Risk Matrix (Likelihood x Consequence)", "group": "1. Identify Current Issues & Potential Risks", "purpose": "Standard 5x5 grid to rate and prioritise risks consistently across the team.", "cols": ["Likelihood \\ Consequence", "1 Negligible", "2 Minor", "3 Moderate", "4 Major", "5 Severe"], "rows": 5, "guide": ["Rows: 5 Almost certain, 4 Likely, 3 Possible, 2 Unlikely, 1 Rare.", "Define your action bands: e.g. score 15+ = immediate action; 8-14 = planned mitigation; <8 = monitor."], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "5-whys": {"name": "5 Whys", "group": "1. Identify Current Issues & Potential Risks", "purpose": "Drill from symptom to root cause by asking why until the systemic cause is exposed.", "cols": ["Step", "Question", "Answer / finding", "Evidence"], "rows": 5, "guide": ["Problem statement first: what, where, when, how big.", "Stop when the answer points to a process/system you can fix, not a person.", "Countermeasure section: Root cause | Countermeasure | Owner | Due date | Verified by."], "hdr": ["Problem statement", "Asset", "Date of event", "Team members", "Facilitator", "Date"]}, "standard-operating-procedure-sop": {"name": "Standard Operating Procedure (SOP)", "group": "2. Establish Quick Recovery Strategies", "purpose": "Repeatable step-by-step method with safety, quality and time standards built in.", "cols": ["Step #", "Action", "Key point (how)", "Reason (why)", "Safety / PPE", "Time (min)", "Visual ref"], "rows": 12, "guide": ["Write at the level of the least experienced qualified person.", "Validate by having someone follow it verbatim."], "hdr": ["Procedure title", "SOP number", "Asset", "Version", "Author", "Approved by / date"]}, "troubleshooting-guide-decision-tree": {"name": "Troubleshooting Guide / Decision Tree", "group": "2. Establish Quick Recovery Strategies", "purpose": "Symptom-based diagnosis path so any shift reaches the fix quickly.", "cols": ["Symptom", "Check 1 (most likely)", "If yes -> action", "If no -> check 2", "If yes -> action", "If no -> escalate to"], "rows": 10, "guide": ["Order checks by probability x ease: cheapest, most likely checks first."], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "mttr-baseline-analysis": {"name": "MTTR Baseline Analysis", "group": "2. Establish Quick Recovery Strategies", "purpose": "Establish current actual repair times per failure type as the improvement baseline.", "cols": ["Failure type", "Events (last 12 mo)", "Total repair time", "MTTR (avg)", "Longest", "Shortest", "Main delay contributor (diagnosis/parts/access/permits/skills)", "Target MTTR"], "rows": 8, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "recovery-kit-audit-checklist": {"name": "Recovery Kit Audit Checklist", "group": "2. Establish Quick Recovery Strategies", "purpose": "Verify recovery tools, parts, documents and permits are ready before they're needed.", "cols": ["Item", "Required qty", "Location", "Present? (Y/N)", "Condition OK? (Y/N)", "Expiry / calibration due", "Action"], "rows": 12, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "single-point-of-failure-analysis": {"name": "Single Point of Failure Analysis", "group": "3. Identify & Establish Back-up Strategies", "purpose": "Identify components or assets with no redundancy whose failure stops everything.", "cols": ["System / line", "Component / asset", "Failure stops production? (Y/N)", "Existing redundancy", "Time to restore", "Mitigation option", "Priority"], "rows": 10, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "business-impact-analysis": {"name": "Business Impact Analysis", "group": "3. Identify & Establish Back-up Strategies", "purpose": "Quantify what an outage of this asset costs the business per unit time.", "cols": ["Impact area", "Description", "Cost per hour (R)", "Cost per day (R)", "Recovery time objective", "Notes"], "rows": 8, "guide": ["Impact areas: lost production, labour idle, contractual penalties, expediting, customer impact, quality losses."], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "contingency-plan-template": {"name": "Contingency Plan Template", "group": "3. Identify & Establish Back-up Strategies", "purpose": "Documented back-up plan with activation triggers, steps and authorities.", "cols": ["Step", "Action", "Responsible", "Time target", "Resources / contacts", "Notes"], "rows": 10, "guide": [], "hdr": ["Scenario covered", "Asset", "Activation trigger", "Decision authority", "Version / date", "Next test date"]}, "critical-spares-identification-checklist": {"name": "Critical Spares Identification Checklist", "group": "4. Identify & Stock Critical Spares", "purpose": "Systematically identify parts whose absence stops the asset.", "cols": ["Component", "Failure stops asset? (Y/N)", "Failure probability (H/M/L)", "Lead time", "Repairable? (Y/N)", "Currently stocked? (Y/N)", "Critical spare? (Y/N)"], "rows": 12, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "spares-criticality-analysis-matrix": {"name": "Spares Criticality Analysis Matrix", "group": "4. Identify & Stock Critical Spares", "purpose": "Score each spare: criticality = f(impact, probability, lead time) -> stocking policy.", "cols": ["Part no.", "Description", "Downtime impact (1-5)", "Failure probability (1-5)", "Lead time score (1-5)", "Criticality score", "Policy (Stock/Consign/Order on demand)", "Min/Max"], "rows": 12, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "min-max-level-calculator": {"name": "Min/Max Level Calculator", "group": "4. Identify & Stock Critical Spares", "purpose": "Set stock levels from usage, lead time and safety stock logic.", "cols": ["Part no.", "Annual usage", "Lead time (days)", "Usage during lead time", "Safety stock", "Min (reorder point)", "Max", "Order qty"], "rows": 10, "guide": ["Min = usage during lead time + safety stock. Max = Min + economic order quantity."], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "maintenance-task-inventory": {"name": "Maintenance Task Inventory", "group": "5. Develop & Schedule Maintenance Tactics", "purpose": "List everything currently done to the asset as the starting point for optimisation.", "cols": ["Task", "Type (PM/PdM/CBM/RTF/Statutory)", "Frequency", "Duration", "Trade", "Origin (OEM/history/habit)", "Value adding? (Y/N/?)"], "rows": 12, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "rcm-rcm-lite-worksheet": {"name": "RCM / RCM-lite Worksheet", "group": "5. Develop & Schedule Maintenance Tactics", "purpose": "Function-driven tactic selection: what must the asset do, how does it fail, what's worth doing about it.", "cols": ["Function", "Functional failure", "Failure mode", "Failure effect", "Consequence (S/E/O/N)", "Selected tactic", "Frequency", "Rationale"], "rows": 10, "guide": ["Consequence codes: Safety, Environmental, Operational, Non-operational.", "Tactic options: condition-based, time-based restore/replace, failure-finding, redesign, run-to-failure."], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "pm-optimisation-template": {"name": "PM Optimisation Template", "group": "5. Develop & Schedule Maintenance Tactics", "purpose": "Challenge each existing PM task: keep, change frequency, convert to condition-based, or delete.", "cols": ["Current PM task", "Frequency", "Failure mode addressed", "Evidence it prevents failure", "Decision (Keep/Extend/CBM/Delete)", "New frequency", "Owner"], "rows": 12, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "cmms-task-loading-sheet": {"name": "CMMS Task Loading Sheet", "group": "5. Develop & Schedule Maintenance Tactics", "purpose": "Structured sheet to load finalised tasks into the CMMS correctly first time.", "cols": ["Task code", "Task description", "Asset / functional location", "Trade", "Frequency", "Duration", "Materials / kit", "Shutdown required?", "Acceptance criteria"], "rows": 12, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "fmea-worksheet-aiag-iec-60812": {"name": "FMEA Worksheet (AIAG / IEC 60812)", "group": "6. Develop FMEA's", "purpose": "The core FMEA table: functions to failure modes to effects, causes, controls and RPN.", "cols": ["Item / function", "Failure mode", "Effect(s)", "Severity (1-10)", "Cause(s)", "Occurrence (1-10)", "Current controls", "Detection (1-10)", "RPN", "Recommended action", "Owner / due", "Revised RPN"], "rows": 10, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "rpn-scoring-tables": {"name": "RPN Scoring Tables", "group": "6. Develop FMEA's", "purpose": "Agreed 1-10 anchor descriptions for Severity, Occurrence and Detection.", "cols": ["Score", "Severity description", "Occurrence description", "Detection description"], "rows": 10, "guide": ["Calibrate the team on these anchors before scoring to keep RPNs comparable across FMEAs."], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "action-tracker": {"name": "Action Tracker", "group": "6. Develop FMEA's", "purpose": "Drive FMEA (and audit) actions to verified closure.", "cols": ["#", "Action", "Source (FMEA/audit/AAR)", "Owner", "Due date", "Status", "Evidence of completion", "Verified by / date"], "rows": 12, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "skills-matrix-ilu-4-level": {"name": "Skills Matrix (ILU / 4-Level)", "group": "7. Skills Matrix & Trained People", "purpose": "One grid: people vs skills, with visual competence levels and coverage check.", "cols": ["Team member \\ Skill", "Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5", "Skill 6", "Skill 7", "Skill 8"], "rows": 10, "guide": ["Levels: 0 = untrained; I = can do with supervision; L = can do alone; U = can do and teach others.", "Check each column: at least two people at L+ per shift-critical skill."], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "training-plan-template": {"name": "Training Plan Template", "group": "7. Skills Matrix & Trained People", "purpose": "From gap to scheduled, budgeted training with completion tracking.", "cols": ["Team member", "Skill gap", "Training intervention (OEM/OJT/course/OPL)", "Provider", "Planned date", "Cost", "Completed", "Assessed competent? (Y/N)"], "rows": 12, "guide": [], "hdr": ["Asset / Equipment", "Site / Area", "Prepared by", "Date", "Reviewed by", "Review date"]}, "practical-competency-assessment": {"name": "Practical Competency Assessment", "group": "7. Skills Matrix & Trained People", "purpose": "Assess by observation of real work, not classroom attendance.", "cols": ["Assessment criterion", "Standard expected", "Observed performance", "Competent? (Y/N)", "Re-assessment needed"], "rows": 10, "guide": [], "hdr": ["Candidate", "Assessor", "Task assessed", "Date", "Result", "Next review"]}};
+const GROUPS = [["1. Identify Current Issues & Potential Risks", ["downtime-breakdown-log", "risk-register", "risk-matrix-likelihood-x-consequence", "5-whys"]], ["2. Establish Quick Recovery Strategies", ["standard-operating-procedure-sop", "troubleshooting-guide-decision-tree", "mttr-baseline-analysis", "recovery-kit-audit-checklist"]], ["3. Identify & Establish Back-up Strategies", ["single-point-of-failure-analysis", "business-impact-analysis", "contingency-plan-template"]], ["4. Identify & Stock Critical Spares", ["critical-spares-identification-checklist", "spares-criticality-analysis-matrix", "min-max-level-calculator"]], ["5. Develop & Schedule Maintenance Tactics", ["maintenance-task-inventory", "rcm-rcm-lite-worksheet", "pm-optimisation-template", "cmms-task-loading-sheet"]], ["6. Develop FMEA's", ["fmea-worksheet-aiag-iec-60812", "rpn-scoring-tables", "action-tracker"]], ["7. Skills Matrix & Trained People", ["skills-matrix-ilu-4-level", "training-plan-template", "practical-competency-assessment"]]];
+const PILLAR_DEFS = [
+  "A systematic understanding of what can go wrong on this asset: known problems, failure history, and credible risks to safety, quality, production, environment and cost — captured in a live risk register and ranked by likelihood and consequence.",
+  "Pre-planned responses that minimise downtime when failure does occur: documented recovery procedures for the most likely failure scenarios, with target repair times (MTTR), pre-staged tools and permits, and all shifts trained to execute them.",
+  "A fallback that keeps the business running while the asset is down: redundancy, rerouting, rental or standby equipment, buffer stock, or supplier agreements — with clear activation triggers, tested response times and defined decision authority.",
+  "Assurance that the parts which would stop this asset are available when needed: identified through criticality analysis, stocked at justified min/max levels or secured through supplier agreements, correctly stored and preserved, and linked to BOMs.",
+  "The right maintenance approach matched to each dominant failure mode: preventive, predictive/condition-based, failure-finding or deliberate run-to-failure — selected from failure behaviour and consequence (e.g. via RCM), loaded into the CMMS, and reviewed for effectiveness.",
+  "Failure Mode and Effects Analysis: a structured team study of how the asset can fail, the effect and severity of each failure, its causes and current controls — scored (RPN) to prioritise actions, and kept alive through reviews after failures and changes.",
+  "Competent, available people: the required skills defined per role, the team's actual competence mapped on a skills matrix, gaps closed through planned training and practical assessment, coverage across all shifts, and no single-person dependencies."
+];
+const PILLARS = ["Identify current issues & potential risks","Establish quick recovery strategies","Identify & establish back-up strategies","Identify & stock critical spares","Develop & schedule the right maintenance tactics","Develop FMEAs","Establish skills matrix & train people"];
+const STATES = ["NOT ASSESSED","GAP","PARTIAL","IN PLACE"];
+const MAX = 3;
+let notesAllOpen = false;
+let currentTpl = null;
+const tplData = {}; // slug -> {hdr:[], cells:[[...]], rows:n}
+
+function tslug(t){return t.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"");}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+
+/* ---------- Tabs ---------- */
+function switchTab(btn){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(btn.dataset.panel).classList.add("active");
+  window.scrollTo({top:0});
+}
+function goToPanel(id){
+  document.querySelectorAll(".tab").forEach(t=>{
+    if(t.dataset.panel===id) switchTab(t);
+  });
+}
+
+/* ---------- Matrix ---------- */
+function blankNotes(){ return ["","","","","","",""]; }
+function blankOpen(){ return [false,false,false,false,false,false,false]; }
+let assets = [
+  {name:"Compressor — Line 1", scores:[0,0,0,0,0,0,0], notes:blankNotes(), open:blankOpen()},
+  {name:"CNC Machine 04",      scores:[0,0,0,0,0,0,0], notes:blankNotes(), open:blankOpen()},
+  {name:"Forklift FL-102",     scores:[0,0,0,0,0,0,0], notes:blankNotes(), open:blankOpen()},
+  {name:"HVAC Plant Room",     scores:[0,0,0,0,0,0,0], notes:blankNotes(), open:blankOpen()},
+  {name:"Conveyor System A",   scores:[0,0,0,0,0,0,0], notes:blankNotes(), open:blankOpen()}
+];
+
+function chipHTML(t){
+  return `<span class="toolchip" onclick="openTemplate('${tslug(t)}')">${t}</span>`;
+}
+function GUIDANCE_TOOLS(si,r){ return TOOLS[si][r].map(chipHTML).join(""); }
+
+function render(){
+  const tb = document.getElementById("tbody");
+  tb.innerHTML = "";
+  assets.forEach((a,ai)=>{
+    const tr = document.createElement("tr");
+    const total = a.scores.reduce((s,v)=>s+v,0);
+    const pct = Math.round(total/(PILLARS.length*MAX)*100);
+    let cells = `<td><input class="asset-name" value="${esc(a.name)}" onchange="assets[${ai}].name=this.value;render()"></td>`;
+    a.scores.forEach((s,si)=>{
+      const hasNote = a.notes[si].trim().length>0;
+      const isOpen = a.open[si];
+      const acts = GUIDANCE[si][s].map(x=>`<li>${x}</li>`).join("");
+      cells += `<td><div class="cellwrap">
+        <button class="cell s${s}" onclick="cycle(${ai},${si})">${STATES[s]}</button>
+        <button class="notebtn" onclick="toggleNote(${ai},${si})">${hasNote?'<span class="flag"></span>':''}✎ Notes &amp; Actions</button>
+        <div class="notepanel${isOpen?' open':''}">
+          <div class="actions${hasNote?' hasnote':''}">
+            <div class="atitle"><span>Suggested actions — ${STATES[s]}</span>
+              <button class="useact" onclick="copyActions(${ai},${si})">Copy to notes</button></div>
+            <ul>${acts}</ul>
+            <div class="tools"><div class="tlabel">Possible tools</div>${GUIDANCE_TOOLS(si,s)}</div>
+          </div>
+          <textarea class="notearea" placeholder="Evidence, agreed actions, owner, due date…"
+            oninput="assets[${ai}].notes[${si}]=this.value" onblur="render()">${esc(a.notes[si])}</textarea>
+        </div>
+      </div></td>`;
+    });
+    cells += `<td class="score">${total} / ${PILLARS.length*MAX}<span class="pct">${pct}%</span><div class="bar"><span style="width:${pct}%"></span></div></td>`;
+    cells += `<td><button class="del" title="Remove asset" onclick="removeAsset(${ai})">✕</button></td>`;
+    tr.innerHTML = cells;
+    tb.appendChild(tr);
+  });
+  renderFoot(); renderCards();
+}
+function renderFoot(){
+  const fr = document.getElementById("footRow");
+  let html = `<td>Pillar average</td>`;
+  PILLARS.forEach((p,si)=>{
+    const avg = assets.length ? assets.reduce((s,a)=>s+a.scores[si],0)/assets.length : 0;
+    const pct = Math.round(avg/MAX*100);
+    const col = pct>=67 ? "var(--good)" : pct>=34 ? "var(--amber)" : "var(--orange)";
+    html += `<td>${pct}%<div class="pillbar"><span style="width:${pct}%;background:${col}"></span></div></td>`;
+  });
+  html += `<td></td><td></td>`;
+  fr.innerHTML = html;
+}
+function renderCards(){
+  const totalMax = assets.length*PILLARS.length*MAX;
+  const total = assets.reduce((s,a)=>s+a.scores.reduce((x,v)=>x+v,0),0);
+  const pct = totalMax ? Math.round(total/totalMax*100) : 0;
+  document.getElementById("overallPct").textContent = pct + "%";
+  document.getElementById("overallNote").textContent =
+    pct>=75 ? "Strong readiness — maintain and audit annually." :
+    pct>=50 ? "Moderate readiness — close the highlighted gaps." :
+    pct>0   ? "Significant exposure — prioritise gap closure now." :
+              "Score cells in the Improvement Matrix to see fleet-wide readiness.";
+  if(assets.length && total>0){
+    let minI=0, minV=Infinity;
+    PILLARS.forEach((p,si)=>{
+      const avg = assets.reduce((s,a)=>s+a.scores[si],0)/assets.length;
+      if(avg<minV){minV=avg;minI=si;}
+    });
+    document.getElementById("weakPillar").textContent = (minI+1)+". "+PILLARS[minI];
+    let minA=0, minAV=Infinity;
+    assets.forEach((a,ai)=>{
+      const t=a.scores.reduce((s,v)=>s+v,0);
+      if(t<minAV){minAV=t;minA=ai;}
+    });
+    document.getElementById("weakAsset").textContent = assets[minA].name;
+  } else {
+    document.getElementById("weakPillar").textContent = "—";
+    document.getElementById("weakAsset").textContent = "—";
+  }
+}
+function cycle(ai,si){ assets[ai].scores[si]=(assets[ai].scores[si]+1)%4; render(); }
+function toggleNote(ai,si){ assets[ai].open[si]=!assets[ai].open[si]; render(); }
+function toggleAllNotes(){ notesAllOpen=!notesAllOpen; assets.forEach(a=>{a.open=a.open.map(()=>notesAllOpen);}); render(); }
+function copyActions(ai,si){
+  const s = assets[ai].scores[si];
+  const txt = GUIDANCE[si][s].map(x=>"• "+x).join("\n");
+  assets[ai].notes[si] = assets[ai].notes[si].trim() ? assets[ai].notes[si].trim()+"\n"+txt : txt;
+  assets[ai].open[si] = true; render();
+}
+function addAsset(){ assets.push({name:"New Asset",scores:[0,0,0,0,0,0,0],notes:blankNotes(),open:blankOpen()}); render(); }
+function removeAsset(ai){ assets.splice(ai,1); render(); }
+
+/* ---------- Tab 2: reference ---------- */
+function renderRef(){
+  const g = document.getElementById("refgrid");
+  g.innerHTML = PILLARS.map((p,si)=>{
+    const rows = [0,1,2,3].map(r=>{
+      const items = GUIDANCE[si][r].map(x=>`• ${x}`).join("<br>");
+      const tls = TOOLS[si][r].map(chipHTML).join("");
+      return `<div class="refrow r${r}"><div class="tag">${STATES[r]}</div><div class="txt">${items}<div class="tools"><div class="tlabel">Possible tools</div>${tls}</div></div></div>`;
+    }).join("");
+    return `<div class="refcard"><h4 class="tip"><span class="num">${si+1}</span>${p}<span class="tipbox"><b>${si+1}. ${p}</b>${PILLAR_DEFS[si]}</span></h4>${rows}</div>`;
+  }).join("");
+}
+
+/* ---------- Tab 3: templates ---------- */
+const FLATLIST = GROUPS.flatMap(([g,slugs])=>slugs);
+let openGroups = new Set();
+
+function renderNav(filter){
+  const nl = document.getElementById("navlist");
+  const f = (filter||"").toLowerCase();
+  nl.innerHTML = GROUPS.map(([g,slugs],gi)=>{
+    const vis = slugs.filter(sl=>!f || TEMPLATES[sl].name.toLowerCase().includes(f));
+    if(!vis.length) return "";
+    const isOpen = f ? true : (openGroups.has(gi) || (currentTpl && slugs.includes(currentTpl)));
+    const links = vis.map(sl=>`<a href="javascript:void(0)" id="nav-${sl}" class="${currentTpl===sl?'sel':''}" onclick="openTemplate('${sl}')">${TEMPLATES[sl].name}</a>`).join("");
+    return `<div class="navgrp${isOpen?' open':''}">
+      <button onclick="toggleGroup(${gi})"><span class="gnum">${g.charAt(0)}</span>${g.slice(3)}<span class="count">${vis.length}</span><span class="caret">▶</span></button>
+      <div class="items">${links}</div>
+    </div>`;
+  }).join("");
+}
+function toggleGroup(gi){
+  if(openGroups.has(gi)) openGroups.delete(gi); else openGroups.add(gi);
+  renderNav(document.getElementById("tplsearch").value);
+}
+
+function showGallery(){
+  currentTpl = null;
+  renderNav(document.getElementById("tplsearch").value);
+  document.getElementById("tplview").innerHTML = '<div class="gallery">' +
+    GROUPS.map(([g,slugs])=>
+      `<h2>${g}</h2><div class="gcards">` +
+      slugs.map(sl=>`<div class="gcard" onclick="openTemplate('${sl}')"><h4>${TEMPLATES[sl].name}</h4><p>${TEMPLATES[sl].purpose}</p></div>`).join("") +
+      `</div>`
+    ).join("") + '</div>';
+  window.scrollTo({top:0});
+}
+
+function initTplData(sl){
+  if(tplData[sl]) return;
+  const t = TEMPLATES[sl];
+  tplData[sl] = {
+    hdr: t.hdr.map(()=>""),
+    cells: Array.from({length:t.rows},()=>t.cols.map(()=>""))
+  };
+}
+
+function openTemplate(sl){
+  initTplData(sl);
+  currentTpl = sl;
+  goToPanel("p-templates");
+  renderNav(document.getElementById("tplsearch").value);
+  const t = TEMPLATES[sl], d = tplData[sl];
+  const idx = FLATLIST.indexOf(sl);
+  const prev = idx>0 ? FLATLIST[idx-1] : null;
+  const next = idx<FLATLIST.length-1 ? FLATLIST[idx+1] : null;
+  const hdr = t.hdr.map((h,i)=>`<div class="hf"><label>${h}</label><input value="${esc(d.hdr[i])}" oninput="tplData['${sl}'].hdr[${i}]=this.value"></div>`).join("");
+  const guide = t.guide.length ? `<ul class="guide">${t.guide.map(x=>`<li>${x}</li>`).join("")}</ul>` : "";
+  const th = t.cols.map(c=>`<th>${c}</th>`).join("");
+  const trs = d.cells.map((row,ri)=>
+    "<tr>"+row.map((v,ci)=>`<td contenteditable="true" oninput="tplData['${sl}'].cells[${ri}][${ci}]=this.innerText">${esc(v)}</td>`).join("")+"</tr>"
+  ).join("");
+  document.getElementById("tplview").innerHTML = `
+    <div class="tplcard">
+      <div class="crumbbar">
+        <div class="crumb">
+          <button class="backbtn" onclick="showGallery()">← All tools</button>
+          <span class="pillbadge">${t.group}</span>
+        </div>
+        <div class="navarrows">
+          <button ${prev?`onclick="openTemplate('${prev}')"`:"disabled"} title="${prev?TEMPLATES[prev].name:''}">← Prev</button>
+          <span style="font-size:11px;color:#8B8677;font-weight:600;align-self:center;">${idx+1} / ${FLATLIST.length}</span>
+          <button ${next?`onclick="openTemplate('${next}')"`:"disabled"} title="${next?TEMPLATES[next].name:''}">Next →</button>
+        </div>
+      </div>
+      <div class="tplhead">
+        <h3>${t.name}</h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn ghost" onclick="clearTemplate('${sl}')">Clear</button>
+          <button class="btn ghost" onclick="exportTemplateXlsx('${sl}')">Save to Excel</button>
+          <button class="btn" onclick="window.print()">Save as PDF</button>
+        </div>
+      </div>
+      <p class="purpose">${t.purpose}</p>
+      <div class="hdrgrid">${hdr}</div>
+      ${guide}
+      <div class="tplscroll"><table class="tpl"><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table></div>
+      <div class="rowbtns">
+        <button class="smallbtn" onclick="addTplRow('${sl}')">+ Add row</button>
+        <button class="smallbtn" onclick="removeTplRow('${sl}')">− Remove last row</button>
+      </div>
+    </div>`;
+  const nav = document.getElementById("nav-"+sl);
+  if(nav) nav.scrollIntoView({block:"nearest"});
+  window.scrollTo({top:0});
+}
+function addTplRow(sl){ tplData[sl].cells.push(TEMPLATES[sl].cols.map(()=>"")); openTemplate(sl); }
+function removeTplRow(sl){ if(tplData[sl].cells.length>1){ tplData[sl].cells.pop(); openTemplate(sl);} }
+function clearTemplate(sl){ delete tplData[sl]; initTplData(sl); openTemplate(sl); }
+
+
+
+/* ---------- Tab 4: 8-week project plan ---------- */
+/* w: [startWeek, endWeek] 1-based inclusive; ms = milestone at week */
+const PLAN_VERSION = 7; // bump whenever PLAN structure changes
+const PLAN = [
+ {phase:"Mobilise & Baseline", tasks:[
+   {n:"Form project team, appoint sponsor & pillar owners", w:[1,1], o:"", tools:[]},
+   {n:"Define asset scope & prioritise assets by downtime impact", w:[1,1], o:"", tools:["Downtime / Breakdown Log"]},
+   {n:"Baseline assessment of prioritised assets in the Improvement Matrix", w:[1,1], o:"", tools:[]},
+   {n:"Kick-off communication & weekly review cadence set", w:[1,1], o:"", tools:[]},
+ ], ms:{week:1, label:"M1 — Baseline scores agreed & vital-few assets selected"}},
+ {phase:"Pillar 1: Identify Current Issues & Potential Risks", tasks:[
+   {n:"Risk identification workshops & gemba walks per critical asset", w:[2,2], o:"", tools:["Downtime / Breakdown Log"]},
+   {n:"Build & rank the Risk Register (likelihood × consequence)", w:[2,2], o:"", tools:["Risk Register","Risk Matrix (Likelihood x Consequence)"]},
+   {n:"Validate top risks cross-functionally; agree top 3 per asset", w:[2,2], o:"", tools:[]},
+ ], ms:{week:2, label:"M2 — Risk registers live for all vital-few assets"}},
+ {phase:"Pillar 2: Establish Quick Recovery Strategies", tasks:[
+   {n:"Baseline MTTR & brainstorm credible failure scenarios", w:[3,3], o:"", tools:["MTTR Baseline Analysis"]},
+   {n:"Write recovery SOPs & troubleshooting guides for top failure modes", w:[3,3], o:"", tools:["Standard Operating Procedure (SOP)","Troubleshooting Guide / Decision Tree"]},
+   {n:"Pre-stage recovery kits; verify LOTO procedures", w:[3,3], o:"", tools:["Recovery Kit Audit Checklist"]},
+ ], ms:{week:3, label:"M3 — Recovery procedures documented & kits staged"}},
+ {phase:"Pillar 3: Identify & Establish Back-up Strategies", tasks:[
+   {n:"Single point of failure & business impact analysis", w:[3,4], o:"", tools:["Single Point of Failure Analysis","Business Impact Analysis"]},
+   {n:"Select & document back-up strategy per critical failure", w:[4,4], o:"", tools:["Contingency Plan Template"]},
+   {n:"Secure rental / supplier standby agreements where justified", w:[4,4], o:"", tools:["Contingency Plan Template"]},
+ ], ms:{week:4, label:"M4 — Back-up strategies documented with activation triggers"}},
+ {phase:"Pillar 4: Identify & Stock Critical Spares", tasks:[
+   {n:"Identify critical spares from BOMs & failure history", w:[4,4], o:"", tools:["Critical Spares Identification Checklist"]},
+   {n:"Criticality analysis; set min/max; place orders", w:[5,5], o:"", tools:["Spares Criticality Analysis Matrix","Min/Max Level Calculator"]},
+   {n:"Secure consignment / lead-time agreements for long-lead items", w:[5,5], o:"", tools:["Spares Criticality Analysis Matrix"]},
+ ], ms:{week:5, label:"M5 — Critical spares stocked or secured by agreement"}},
+ {phase:"Pillar 5: Develop & Schedule Maintenance Tactics", tasks:[
+   {n:"Inventory current tasks & review equipment history", w:[5,5], o:"", tools:["Maintenance Task Inventory"]},
+   {n:"Select tactics per dominant failure mode (RCM-lite)", w:[6,6], o:"", tools:["RCM / RCM-lite Worksheet"]},
+   {n:"Optimise PMs; load & schedule finalised task lists in CMMS", w:[6,6], o:"", tools:["PM Optimisation Template","CMMS Task Loading Sheet"]},
+ ], ms:{week:6, label:"M6 — New maintenance plans live & scheduled in CMMS"}},
+ {phase:"Pillar 6: Develop FMEA's", tasks:[
+   {n:"FMEA team charters & data collection packs", w:[6,6], o:"", tools:["FMEA Worksheet (AIAG / IEC 60812)"]},
+   {n:"Facilitate FMEAs; score RPN; agree actions on high RPNs", w:[7,7], o:"", tools:["FMEA Worksheet (AIAG / IEC 60812)","RPN Scoring Tables"]},
+   {n:"Link FMEA outputs back into PMs & spares; set review schedule", w:[7,7], o:"", tools:["Action Tracker"]},
+ ], ms:{week:7, label:"M7 — FMEAs signed off & linked to maintenance plans"}},
+ {phase:"Pillar 7: Establish Skills Matrix & Train People", tasks:[
+   {n:"Build skills matrix vs new tactics & procedures", w:[7,7], o:"", tools:["Skills Matrix (ILU / 4-Level)"]},
+   {n:"Deliver priority training & practical assessments", w:[7,7], o:"", tools:["Training Plan Template","Practical Competency Assessment"]},
+   {n:"Close single-person dependencies; verify shift coverage", w:[7,7], o:"", tools:["Skills Matrix (ILU / 4-Level)"]},
+ ], ms:{week:8, label:"M8 — All shifts competent on new procedures"}},
+ {phase:"Re-assess & Sustain", tasks:[
+   {n:"Re-run the Improvement Matrix; compare vs Week 1 baseline", w:[8,8], o:"", tools:[]},
+   {n:"Close-out report: scores, actions done, benefits, residual gaps", w:[8,8], o:"", tools:["Action Tracker"]},
+   {n:"Hand over sustain plan: review cadences, living FMEAs, KPI dashboard", w:[8,8], o:"", tools:["Action Tracker"]},
+ ], ms:{week:8, label:"M9 — Programme close-out & sustain plan handed over"}},
+];
+/* live editable copy of the plan */
+let plan = PLAN.map(ph=>({
+  phase: ph.phase,
+  ms: {week: ph.ms.week, label: ph.ms.label},
+  tasks: ph.tasks.map(t=>({n:t.n, w:[t.w[0],t.w[1]], o:"", st:0, tools:t.tools.slice()}))
+}));
+const STLBL = ["NOT STARTED","IN PROGRESS","DONE"];
+let planWeeks = 8;
+function changeWeeks(d){
+  const nw = planWeeks + d;
+  if(nw < 4 || nw > 26) return;
+  if(d < 0){
+    const maxUsed = Math.max(
+      ...plan.flatMap(ph=>ph.tasks.map(t=>t.w[1])),
+      ...plan.map(ph=>ph.ms.week), 1);
+    if(nw < maxUsed){ alert("Cannot shorten below week "+maxUsed+" — tasks or milestones are scheduled there. Move them first."); return; }
+  }
+  planWeeks = nw;
+  renderPlan();
+}
+
+function weekDates(){
+  const el = document.getElementById("planStart");
+  let d = el && el.value ? new Date(el.value+"T00:00:00") : null;
+  return Array.from({length:planWeeks},(_,i)=>{
+    if(!d) return "";
+    const s = new Date(d); s.setDate(s.getDate()+i*7);
+    const e = new Date(s); e.setDate(e.getDate()+4);
+    const f = x=>x.toLocaleDateString(undefined,{day:"numeric",month:"short"});
+    return f(s)+" – "+f(e);
+  });
+}
+function wkSel(pi,ti,idx){
+  const v = plan[pi].tasks[ti].w[idx];
+  let opts = "";
+  for(let w=1;w<=planWeeks;w++) opts += `<option value="${w}"${w===v?" selected":""}>${w}</option>`;
+  return `<select class="wksel" onchange="setTaskWeek(${pi},${ti},${idx},this.value)">${opts}</select>`;
+}
+function renderPlan(){
+  const tbl = document.getElementById("ganttTable");
+  const wd = weekDates();
+  let html = `<tr><th style="text-align:left;min-width:250px;">Task</th><th style="min-width:95px;">Owner</th><th style="min-width:92px;">Status</th><th class="wkedit" style="min-width:86px;">Wks</th>`;
+  for(let w=1;w<=planWeeks;w++) html += `<th class="wk">Week ${w}${wd[w-1]?`<small>${wd[w-1]}</small>`:""}</th>`;
+  html += `</tr>`;
+  plan.forEach((ph,pi)=>{
+    html += `<tr class="phase"><td colspan="${4+planWeeks}"><span class="pnum">${pi+1}</span><input class="phname" value="${esc(ph.phase)}" oninput="plan[${pi}].phase=this.value"></td></tr>`;
+    ph.tasks.forEach((t,ti)=>{
+      const st = t.st;
+      const toolLinks = t.tools.length ? `<span class="ttools">Tools: ${t.tools.map(x=>`<span onclick="openTemplate('${tslug(x)}')">${x}</span>`).join(" · ")}</span>` : "";
+      html += `<tr><td class="taskname"><div style="display:flex;align-items:center;gap:4px;"><input class="gtname" value="${esc(t.n)}" oninput="plan[${pi}].tasks[${ti}].n=this.value"><button class="del" style="margin:0;" title="Remove task" onclick="removeTask(${pi},${ti})">✕</button></div>${toolLinks}</td>
+        <td class="owner"><input value="${esc(t.o)}" placeholder="owner" oninput="plan[${pi}].tasks[${ti}].o=this.value"></td>
+        <td class="status"><button class="stbtn st${st}" onclick="cycleTask(${pi},${ti})">${STLBL[st]}</button></td>
+        <td class="wkedit">${wkSel(pi,ti,0)}–${wkSel(pi,ti,1)}</td>`;
+      for(let w=1;w<=planWeeks;w++){
+        let bar = "";
+        if(w>=t.w[0] && w<=t.w[1]){
+          const cls = t.w[0]===t.w[1] ? "" : (w===t.w[0] ? "startcap" : (w===t.w[1] ? "endcap" : "midcap"));
+          const stc = st===2 ? "done" : (st===1 ? "prog" : "");
+          bar = `<div class="gbar ${cls} ${stc}"></div>`;
+        }
+        html += `<td class="wkcell">${bar}</td>`;
+      }
+      html += `</tr>`;
+    });
+    html += `<tr><td colspan="${4+planWeeks}" style="background:#FCFBF8;"><button class="gaddrow" onclick="addTask(${pi})">+ Add task to this phase</button></td></tr>`;
+    html += `<tr class="msrow"><td class="taskname">◆ <input class="msname" value="${esc(ph.ms.label)}" oninput="plan[${pi}].ms.label=this.value"></td><td></td><td></td>
+      <td class="wkedit"><select class="wksel" onchange="plan[${pi}].ms.week=+this.value;renderPlan()">${Array.from({length:planWeeks},(_,i)=>`<option value="${i+1}"${ph.ms.week===i+1?" selected":""}>${i+1}</option>`).join("")}</select></td>`;
+    for(let w=1;w<=planWeeks;w++) html += `<td class="wkcell">${w===ph.ms.week?'<div class="gms"></div>':''}</td>`;
+    html += `</tr>`;
+  });
+  tbl.innerHTML = html;
+  const wl = document.getElementById("weeksLabel");
+  if(wl) wl.textContent = planWeeks;
+  const all = plan.flatMap(ph=>ph.tasks);
+  const pct = all.length ? Math.round(all.reduce((s,t)=>s+t.st/2,0)/all.length*100) : 0;
+  document.getElementById("planPct").textContent = pct+"%";
+  document.getElementById("milestoneList").innerHTML =
+    plan.map(ph=>`◆ Wk ${ph.ms.week}: ${ph.ms.label.replace(/^M\d+ — /,"")}`).join("<br>");
+}
+function cycleTask(pi,ti){ plan[pi].tasks[ti].st=(plan[pi].tasks[ti].st+1)%3; renderPlan(); }
+function setTaskWeek(pi,ti,idx,val){
+  const t = plan[pi].tasks[ti]; t.w[idx]=+val;
+  if(t.w[0]>t.w[1]) t.w[idx===0?1:0]=+val;
+  renderPlan();
+}
+function addTask(pi){ plan[pi].tasks.push({n:"New task", w:[1,1], o:"", st:0, tools:[]}); renderPlan(); }
+function removeTask(pi,ti){ plan[pi].tasks.splice(ti,1); renderPlan(); }
+
+
+
+/* ---------- Tab 5: Action plans ---------- */
+const AP_COLS = ["Date","Pillar","Asset / Equipment","Problem / Finding","Cause","Countermeasure","Due Date","Responsible","PDCA Status","Further Comments"];
+let apRows = Array.from({length:5},()=>({date:"",pillar:"",asset:"",prob:"",cause:"",cm:"",due:"",resp:"",com:"",pdca:0}));
+let apFilters = {date:"",pillar:"",asset:"",prob:"",cause:"",cm:"",due:"",resp:"",pdca:"",com:""};
+
+function apFilterActive(){ return Object.values(apFilters).some(v=>v!==""); }
+function apMatch(r){
+  const f = apFilters;
+  const txt = (val,q)=> !q || String(val||"").toLowerCase().includes(q.toLowerCase());
+  return txt(r.date,f.date) && (f.pillar===""||r.pillar===f.pillar) && txt(r.asset,f.asset)
+    && txt(r.prob,f.prob) && txt(r.cause,f.cause) && txt(r.cm,f.cm) && txt(r.due,f.due)
+    && txt(r.resp,f.resp) && (f.pdca===""||String(r.pdca||0)===f.pdca) && txt(r.com,f.com);
+}
+function apSetFilter(key,val){ apFilters[key]=val; renderAP(); }
+function apClearFilters(){ Object.keys(apFilters).forEach(k=>apFilters[k]=""); renderAP(); }
+
+function renderAP(){
+  const tbl = document.getElementById("apTable");
+  const pillarOptsFilter = ['<option value="">All pillars</option>']
+    .concat(PILLARS.map((p,i)=>`<option value="${i+1}. ${p}"${apFilters.pillar===(i+1)+". "+p?" selected":""}>${i+1}. ${p}</option>`))
+    .concat([`<option value="General"${apFilters.pillar==="General"?" selected":""}>General</option>`]).join("");
+  const pdcaOptsFilter = ['<option value="">All statuses</option>']
+    .concat(PDCA_LBL.map((l,i)=>`<option value="${i}"${apFilters.pdca===String(i)?" selected":""}>${l}</option>`)).join("");
+
+  let html = "<tr>"+AP_COLS.map(c=>`<th>${c}</th>`).join("")+"<th></th></tr>";
+  html += `<tr class="apf">
+    <th><input placeholder="filter…" value="${esc(apFilters.date)}" oninput="apSetFilter('date',this.value)"></th>
+    <th><select onchange="apSetFilter('pillar',this.value)">${pillarOptsFilter}</select></th>
+    <th><input placeholder="filter…" value="${esc(apFilters.asset)}" oninput="apSetFilter('asset',this.value)"></th>
+    <th><input placeholder="filter…" value="${esc(apFilters.prob)}" oninput="apSetFilter('prob',this.value)"></th>
+    <th><input placeholder="filter…" value="${esc(apFilters.cause)}" oninput="apSetFilter('cause',this.value)"></th>
+    <th><input placeholder="filter…" value="${esc(apFilters.cm)}" oninput="apSetFilter('cm',this.value)"></th>
+    <th><input placeholder="filter…" value="${esc(apFilters.due)}" oninput="apSetFilter('due',this.value)"></th>
+    <th><input placeholder="filter…" value="${esc(apFilters.resp)}" oninput="apSetFilter('resp',this.value)"></th>
+    <th><select onchange="apSetFilter('pdca',this.value)">${pdcaOptsFilter}</select></th>
+    <th><input placeholder="filter…" value="${esc(apFilters.com)}" oninput="apSetFilter('com',this.value)"></th>
+    <th></th>
+  </tr>`;
+
+  const active = apFilterActive();
+  let shown = 0;
+  apRows.forEach((r,ri)=>{
+    if(!apMatch(r)) return;
+    shown++;
+    const opts = ['<option value=""></option>']
+      .concat(PILLARS.map((p,i)=>`<option value="${i+1}. ${p}"${r.pillar===(i+1)+". "+p?" selected":""}>${i+1}. ${p}</option>`))
+      .concat([`<option value="General"${r.pillar==="General"?" selected":""}>General</option>`]).join("");
+    html += `<tr>
+      <td class="dt"><input type="date" value="${r.date}" onchange="apRows[${ri}].date=this.value"></td>
+      <td class="pl"><select onchange="apRows[${ri}].pillar=this.value">${opts}</select></td>
+      <td class="pl"><input value="${esc(r.asset||"")}" placeholder="asset…" style="border:none;background:transparent;font:inherit;font-size:11px;padding:7px 6px;width:100%;min-width:130px;" oninput="apRows[${ri}].asset=this.value"></td>
+      <td contenteditable="true" oninput="apRows[${ri}].prob=this.innerText">${esc(r.prob)}</td>
+      <td contenteditable="true" oninput="apRows[${ri}].cause=this.innerText">${esc(r.cause||"")}</td>
+      <td contenteditable="true" oninput="apRows[${ri}].cm=this.innerText">${esc(r.cm)}</td>
+      <td class="dt"><input type="date" value="${r.due}" onchange="apRows[${ri}].due=this.value"></td>
+      <td contenteditable="true" oninput="apRows[${ri}].resp=this.innerText">${esc(r.resp)}</td>
+      <td class="pdcacell" title="Click to advance: Plan → Do → Check → Act → done">${pdcaSVG(r.pdca||0, ri)}</td>
+      <td contenteditable="true" oninput="apRows[${ri}].com=this.innerText">${esc(r.com)}</td>
+      <td class="rm">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;">
+          <button class="mvbtn" title="${active?'Clear filters to reorder':'Move up'}" ${(active||ri===0)?"disabled":""} onclick="moveActionRow(${ri},-1)">▲</button>
+          <button class="del" style="margin:0;" title="Remove row" onclick="removeActionRow(${ri})">✕</button>
+          <button class="mvbtn" title="${active?'Clear filters to reorder':'Move down'}" ${(active||ri===apRows.length-1)?"disabled":""} onclick="moveActionRow(${ri},1)">▼</button>
+        </div>
+      </td>
+    </tr>`;
+  });
+  tbl.innerHTML = html;
+
+  const fs = document.getElementById("apFilterSummary");
+  if(fs){
+    fs.innerHTML = active
+      ? `<span>Showing ${shown} of ${apRows.length} measures (filtered)</span><button class="clearf" onclick="apClearFilters()">Clear filters</button>`
+      : `<span>${apRows.length} measure${apRows.length===1?"":"s"} total</span>`;
+  }
+  renderAPSummary();
+}
+
+function renderAPSummary(){
+  const body = document.getElementById("apSummaryBody");
+  if(!body) return;
+  const total = apRows.length;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const overdue = apRows.filter(r=>{
+    if(!r.due || (r.pdca||0)===4) return false;
+    const d = new Date(r.due+"T00:00:00");
+    return d < today;
+  }).length;
+  const done = apRows.filter(r=>(r.pdca||0)===4).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  // by pillar
+  const pillarCounts = {};
+  PILLARS.forEach((p,i)=>pillarCounts[(i+1)+". "+p]=0);
+  pillarCounts["General"]=0;
+  pillarCounts["(unassigned)"]=0;
+  apRows.forEach(r=>{
+    const key = r.pillar && pillarCounts.hasOwnProperty(r.pillar) ? r.pillar : (r.pillar? r.pillar : "(unassigned)");
+    pillarCounts[key] = (pillarCounts[key]||0)+1;
+  });
+  const maxP = Math.max(1,...Object.values(pillarCounts));
+  const pillarRows = Object.entries(pillarCounts).filter(([,c])=>c>0 || true)
+    .map(([k,c])=>`<div class="apsum-row"><span class="lbl" title="${esc(k)}">${esc(k)}</span><span class="track"><span style="width:${(c/maxP*100)}%"></span></span><span class="cnt">${c}</span></div>`).join("");
+
+  // by pdca stage
+  const stageCounts = [0,0,0,0,0];
+  apRows.forEach(r=> stageCounts[r.pdca||0]++ );
+  const maxS = Math.max(1,...stageCounts);
+  const stageRows = PDCA_LBL.map((l,i)=>`<div class="apsum-row"><span class="lbl">${l}</span><span class="track"><span style="width:${(stageCounts[i]/maxS*100)}%"></span></span><span class="cnt">${stageCounts[i]}</span></div>`).join("");
+
+  body.innerHTML = `
+    <div class="apsum-cards">
+      <div class="apsum-card"><div class="n">${total}</div><div class="l">Total measures</div></div>
+      <div class="apsum-card ${overdue>0?'warn':''}"><div class="n">${overdue}</div><div class="l">Overdue</div></div>
+      <div class="apsum-card"><div class="n">${done}</div><div class="l">Completed (Act)</div></div>
+      <div class="apsum-card"><div class="n">${pct}%</div><div class="l">Completion rate</div></div>
+    </div>
+    <div class="apsum-grid">
+      <div class="apsum-block"><h4>By Pillar</h4>${pillarRows}</div>
+      <div class="apsum-block"><h4>By PDCA Stage</h4>${stageRows}</div>
+    </div>`;
+}
+
+/* PDCA quarter-wheel status */
+const PDCA_LBL = ["Not started","Plan","Do","Check","Act — complete"];
+function pdcaSVG(n, ri){
+  // quadrants clockwise from top-right: P, D, C, A
+  const quads = [
+    "M22 22 L22 4 A18 18 0 0 1 40 22 Z",   // P (top-right)
+    "M22 22 L40 22 A18 18 0 0 1 22 40 Z",  // D (bottom-right)
+    "M22 22 L22 40 A18 18 0 0 1 4 22 Z",   // C (bottom-left)
+    "M22 22 L4 22 A18 18 0 0 1 22 4 Z"     // A (top-left)
+  ];
+  const letters = [[31,14,"P"],[31,34,"D"],[13,34,"C"],[13,14,"A"]];
+  let paths = "";
+  quads.forEach((d,i)=>{
+    const filled = i < n;
+    paths += `<path d="${d}" fill="${filled ? (n===4 ? '#2E7D4F' : '#DF6C01') : '#EDEBE4'}" stroke="#fff" stroke-width="1.2"/>`;
+  });
+  letters.forEach(([x,y,L],i)=>{
+    paths += `<text x="${x}" y="${y}" text-anchor="middle" font-size="9" font-weight="800" fill="${i<n ? '#fff' : '#8B8677'}">${L}</text>`;
+  });
+  return `<button class="pdcabtn" onclick="cyclePDCA(${ri})" aria-label="${PDCA_LBL[n]}">
+    <svg viewBox="0 0 44 44" width="40" height="40">${paths}<circle cx="22" cy="22" r="18" fill="none" stroke="#D8D3C8" stroke-width="1"/></svg>
+    <span class="pdcalbl">${PDCA_LBL[n]}</span>
+  </button>`;
+}
+function cyclePDCA(ri){ apRows[ri].pdca = ((apRows[ri].pdca||0)+1)%5; renderAP(); }
+
+function moveActionRow(i,dir){
+  const j = i + dir;
+  if(j<0 || j>=apRows.length) return;
+  const tmp = apRows[i]; apRows[i] = apRows[j]; apRows[j] = tmp;
+  renderAP();
+}
+function addActionRow(){ apRows.push({date:"",pillar:"",asset:"",prob:"",cause:"",cm:"",due:"",resp:"",com:"",pdca:0}); renderAP(); }
+function removeActionRow(ri){ apRows.splice(ri,1); if(!apRows.length) addActionRow(); else renderAP(); }
+
+
+
+
+
+/* ---------- Halden dashboard tab ---------- */
+const HALDEN_TEMPLATE = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Halden Line \u2014 Downtime Intelligence<\/title>\n<script src=\"https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js\"><\/script>\n<script src=\"https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js\"><\/script>\n<style>\n:root{\n  --bg:#0D1420; --panel:#141E31; --panel-2:#1A2539; --line:#26334D;\n  --orange:#CD3B00; --amber:#DF6C01; --gold:#F2A33C;\n  --cyan:#3FB8C4; --steel:#8FA3C0; --text:#E8EDF5; --muted:#5F7396;\n  --red:#E5484D; --green:#46A758;\n}\n*{margin:0;padding:0;box-sizing:border-box}\nbody{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.45}\n.wrap{max-width:1280px;margin:0 auto;padding:28px 24px 60px}\n\n/* header */\nheader{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--orange);padding-bottom:18px;margin-bottom:22px}\n.brand-eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:6px}\nh1{font-size:30px;font-weight:800;letter-spacing:-.5px;text-transform:uppercase}\nh1 span{color:var(--orange)}\n.sub{color:var(--muted);margin-top:4px;font-size:13px}\n.filters{display:flex;gap:8px}\n.filters button{background:var(--panel);border:1px solid var(--line);color:var(--steel);padding:8px 18px;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;border-radius:3px;transition:all .15s}\n.filters button:hover{border-color:var(--amber);color:var(--text)}\n.filters button.active{background:var(--orange);border-color:var(--orange);color:#fff}\n.filters button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}\n\n/* KPI */\n.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:22px}\n.kpi{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--orange);padding:16px 18px;border-radius:4px}\n.kpi .lbl{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:700}\n.kpi .val{font-size:30px;font-weight:800;margin-top:4px;letter-spacing:-1px}\n.kpi .ctx{font-size:12px;color:var(--steel);margin-top:2px}\n.kpi.alt{border-left-color:var(--cyan)}\n.kpi.warn{border-left-color:var(--red)}\n\n/* panels */\n.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}\n.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px 20px}\n.panel.full{grid-column:1/-1}\n.p-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}\n.p-title{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:1px}\n.p-title::before{content:'';display:inline-block;width:8px;height:8px;background:var(--orange);margin-right:8px;transform:rotate(45deg)}\n.p-note{font-size:12px;color:var(--muted)}\n.chart-box{position:relative;height:320px;margin-top:12px}\n.chart-box.tall{height:380px}\n\n/* recurrence table */\ntable{width:100%;border-collapse:collapse;margin-top:12px}\nth{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-weight:700}\nth.num,td.num{text-align:right}\ntd{padding:8px 10px;border-bottom:1px solid rgba(38,51,77,.5);font-size:13px}\ntbody tr:hover{background:rgba(223,108,1,.06)}\n.fault-name{font-weight:700}\n.asset-tag{font-size:11px;color:var(--steel)}\n.wk-strip{display:flex;gap:3px}\n.wk-cell{width:34px;height:18px;border-radius:2px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:#fff;background:var(--panel-2);border:1px solid var(--line)}\n.badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:1px;padding:3px 8px;border-radius:2px;text-transform:uppercase}\n.badge.chronic{background:rgba(205,59,0,.18);color:var(--gold);border:1px solid var(--amber)}\n.badge.spike{background:rgba(229,72,77,.15);color:var(--red);border:1px solid var(--red)}\ntr.is-chronic td{background:rgba(205,59,0,.05)}\ntr.recur-divider td{background:var(--panel-2);color:var(--muted);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;padding:7px 14px;border-top:2px solid var(--orange)}\n\n/* insights */\n.insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}\n.insight{background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:14px 16px}\n.insight .tag{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber)}\n.insight h3{font-size:14px;margin:6px 0 4px;font-weight:800}\n.insight p{font-size:12.5px;color:var(--steel)}\n.insight p b{color:var(--text)}\n\nfooter{margin-top:28px;text-align:center;color:var(--muted);font-size:11px;letter-spacing:1px;text-transform:uppercase}\nfooter b{color:var(--amber)}\n@media(max-width:900px){.grid{grid-template-columns:1fr}h1{font-size:22px}.chart-box{height:280px}}\n@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}\n<\/style>\n<\/head>\n<body>\n<div class=\"wrap\">\n\n<header>\n  <div>\n    <div class=\"brand-eyebrow\">Asset Intelligence<\/div>\n    <h1>Halden Line <span>Downtime Report<\/span><\/h1>\n    <div class=\"sub\" id=\"subLine\">Fault &amp; asset recurrence analysis<\/div>\n  <\/div>\n  <div class=\"filters\" id=\"filters\" role=\"tablist\" aria-label=\"Week filter\">\n    <button class=\"active\" data-wk=\"all\">ALL WEEKS<\/button>\n  <\/div>\n<\/header>\n\n<div class=\"kpis\" id=\"kpis\"><\/div>\n\n<div class=\"grid\">\n  <div class=\"panel full\">\n    <div class=\"p-head\">\n      <div class=\"p-title\">Fault Pareto \u2014 where the minutes go<\/div>\n      <div class=\"p-note\">Bars = downtime (min) \u00b7 Line = cumulative share of total<\/div>\n    <\/div>\n    <div class=\"chart-box tall\"><canvas id=\"pareto\"><\/canvas><\/div>\n  <\/div>\n\n  <div class=\"panel\">\n    <div class=\"p-head\">\n      <div class=\"p-title\">Downtime by asset<\/div>\n      <div class=\"p-note\">Minutes lost per asset<\/div>\n    <\/div>\n    <div class=\"chart-box tall\"><canvas id=\"assets\"><\/canvas><\/div>\n  <\/div>\n\n  <div class=\"panel\">\n    <div class=\"p-head\">\n      <div class=\"p-title\">Chronic vs acute<\/div>\n      <div class=\"p-note\">Frequency vs total downtime \u00b7 top-right = worst repeat offenders<\/div>\n    <\/div>\n    <div class=\"chart-box tall\"><canvas id=\"scatter\"><\/canvas><\/div>\n  <\/div>\n\n  <div class=\"panel full\">\n    <div class=\"p-head\">\n      <div class=\"p-title\">Weekly trend<\/div>\n      <div class=\"p-note\">Downtime minutes (bars) and stoppage count (line) per calendar week<\/div>\n    <\/div>\n    <div class=\"chart-box\"><canvas id=\"trend\"><\/canvas><\/div>\n  <\/div>\n\n  <div class=\"panel full\">\n    <div class=\"p-head\">\n      <div class=\"p-title\">Repeat offenders \u2014 recurrence matrix<\/div>\n      <div class=\"p-note\">Faults logged in 2+ weeks, ranked by total downtime \u00b7 cell shading = minutes that week<\/div>\n    <\/div>\n    <table id=\"recur\">\n      <thead><tr>\n        <th>Fault<\/th><th>Asset<\/th><th id=\"recurWkHead\">Weeks<\/th>\n        <th class=\"num\">Downtime<\/th><th class=\"num\">Stoppages<\/th><th class=\"num\">Min / Stop<\/th><th><\/th>\n      <\/tr><\/thead>\n      <tbody><\/tbody>\n    <\/table>\n  <\/div>\n\n  <div class=\"panel full\">\n    <div class=\"p-head\"><div class=\"p-title\">Findings &amp; focus areas<\/div><\/div>\n    <div class=\"insights\" id=\"insights\"><\/div>\n  <\/div>\n<\/div>\n\n<footer>Generated from Halden_report_July.xlsx<\/footer>\n<\/div>\n\n<script>\nconst DATA = __HALDEN_DATA__;\n\nconst C = {orange:'#CD3B00', amber:'#DF6C01', gold:'#F2A33C', cyan:'#3FB8C4', steel:'#8FA3C0', muted:'#5F7396', line:'#26334D', red:'#E5484D'};\nconst CHARTS_OK = (typeof window.Chart !== \"undefined\");\nif(CHARTS_OK){\n  try{\n    Chart.defaults.color = C.steel;\n    Chart.defaults.borderColor = 'rgba(38,51,77,.6)';\n    Chart.defaults.font.family = \"'Segoe UI',system-ui,sans-serif\";\n    if(typeof ChartDataLabels !== \"undefined\") Chart.register(ChartDataLabels);\n    Chart.defaults.set('plugins.datalabels', {display:false});\n  }catch(e){ console.warn(\"Chart.js setup failed:\", e); }\n}\n\nconst WEEKS = [...new Set(DATA.map(r=>r.cw))].filter(w=>w>0).sort((a,b)=>a-b);\nconst NW = Math.max(WEEKS.length,1);\nconst CHRONIC_N = NW; // present in every week\n(function initChrome(){\n  const sub = document.getElementById('subLine');\n  if(sub) sub.textContent = (WEEKS.length? 'Calendar weeks '+(WEEKS.length>1? WEEKS[0]+'\u2013'+WEEKS[WEEKS.length-1] : WEEKS[0])+' \u00b7 ' : '') + 'Fault & asset recurrence analysis';\n  document.title = 'Halden Line \u2014 Downtime Intelligence' + (WEEKS.length? ' \u00b7 CW'+WEEKS[0]+(WEEKS.length>1?'\u2013'+WEEKS[WEEKS.length-1]:''):'');\n  const fl = document.getElementById('filters');\n  WEEKS.forEach(w=>{\n    const b = document.createElement('button');\n    b.dataset.wk = w; b.textContent = 'CW '+w;\n    fl.appendChild(b);\n  });\n  const rh = document.getElementById('recurWkHead');\n  if(rh) rh.textContent = WEEKS.map(w=>'CW'+w).join(' / ');\n})();\nlet wkFilter = 'all';\nlet charts = {};\n\nfunction rows(){ return wkFilter==='all' ? DATA : DATA.filter(r=>r.cw==wkFilter); }\n\nfunction agg(list, key){\n  const m = {};\n  list.forEach(r=>{\n    const k = r[key];\n    if(!m[k]) m[k] = {dt:0, occ:0, weeks:new Set(), asset:r.asset, byweek:{}};\n    m[k].dt += r.dt; m[k].occ += r.occ; m[k].weeks.add(r.cw);\n    m[k].byweek[r.cw] = (m[k].byweek[r.cw]||0) + r.dt;\n    if(r.asset !== 'Unassigned') m[k].asset = r.asset;\n  });\n  return m;\n}\nconst fmt = n => n.toLocaleString('en-ZA');\n\nfunction renderKPIs(){\n  const list = rows();\n  const dt = list.reduce((s,r)=>s+r.dt,0);\n  const occ = list.reduce((s,r)=>s+r.occ,0);\n  const nFaults = new Set(list.map(r=>r.fault)).size;\n  const fAll = agg(DATA,'fault');\n  const chronic = NW>1 ? Object.values(fAll).filter(f=>f.weeks.size===NW).length : 0;\n  const hrs = (dt/60).toFixed(1);\n  const mps = occ? (dt/occ).toFixed(1) : '\u2014';\n  document.getElementById('kpis').innerHTML = `\n    <div class=\"kpi\"><div class=\"lbl\">Total downtime<\/div><div class=\"val\">${fmt(dt)}<span style=\"font-size:15px;color:var(--muted)\"> min<\/span><\/div><div class=\"ctx\">\u2248 ${hrs} hours lost<\/div><\/div>\n    <div class=\"kpi alt\"><div class=\"lbl\">Stoppages<\/div><div class=\"val\">${fmt(occ)}<\/div><div class=\"ctx\">${mps} min avg per stop<\/div><\/div>\n    <div class=\"kpi alt\"><div class=\"lbl\">Distinct faults<\/div><div class=\"val\">${nFaults}<\/div><div class=\"ctx\">${wkFilter==='all'?('across '+NW+' week'+(NW>1?'s':'')):'this week'}<\/div><\/div>\n    <div class=\"kpi warn\"><div class=\"lbl\">Chronic faults<\/div><div class=\"val\">${chronic}<\/div><div class=\"ctx\">logged in all ${NW} weeks<\/div><\/div>`;\n}\n\nfunction destroy(id){ if(charts[id]){ try{charts[id].destroy();}catch(e){} delete charts[id];} }\n\nfunction renderPareto(){\n  if(!CHARTS_OK) return;\n  destroy('pareto');\n  const f = agg(rows(),'fault');\n  const sorted = Object.entries(f).sort((a,b)=>b[1].dt-a[1].dt).slice(0,14);\n  const total = Object.values(f).reduce((s,v)=>s+v.dt,0);\n  let cum = 0;\n  const cumPct = sorted.map(([,v])=>{ cum+=v.dt; return +(cum/total*100).toFixed(1); });\n  charts.pareto = new Chart(document.getElementById('pareto'),{\n    data:{ labels:sorted.map(([k])=>k),\n      datasets:[\n        {type:'bar', label:'Downtime (min)', data:sorted.map(([,v])=>v.dt),\n         backgroundColor:sorted.map(([,v])=> NW>1 && v.weeks.size===NW && wkFilter==='all' ? C.orange : C.amber+'B3'),\n         borderRadius:2, yAxisID:'y',\n         datalabels:{display:true, anchor:'end', align:'top', color:'#E8EDF5', font:{size:10, weight:'700'}, formatter:v=>fmt(v)}},\n        {type:'line', label:'Cumulative %', data:cumPct, borderColor:C.cyan, backgroundColor:C.cyan,\n         pointRadius:3, tension:.3, yAxisID:'y2',\n         datalabels:{display:ctx=>ctx.dataIndex%2===0, align:'bottom', offset:6, color:C.cyan, font:{size:9.5, weight:'700'}, formatter:v=>v+'%'}}\n      ]},\n    options:{ maintainAspectRatio:false,\n      plugins:{ legend:{labels:{boxWidth:12}},\n        tooltip:{callbacks:{afterLabel:(ctx)=> ctx.datasetIndex===0 ? `${sorted[ctx.dataIndex][1].occ} stoppages \u00b7 weeks: CW${[...sorted[ctx.dataIndex][1].weeks].sort().join(', CW')}` : ''}}},\n      scales:{ x:{ticks:{maxRotation:60,minRotation:45,font:{size:11}},grid:{display:false}},\n        y:{title:{display:true,text:'minutes'},beginAtZero:true,grace:'10%'},\n        y2:{position:'right',min:0,max:100,grid:{display:false},ticks:{callback:v=>v+'%'}}}}\n  });\n}\n\nfunction renderAssets(){\n  if(!CHARTS_OK) return;\n  destroy('assets');\n  const a = agg(rows().filter(r=>r.asset!=='Unassigned'),'asset');\n  const sorted = Object.entries(a).sort((x,y)=>y[1].dt-x[1].dt).slice(0,12);\n  charts.assets = new Chart(document.getElementById('assets'),{\n    type:'bar',\n    data:{ labels:sorted.map(([k])=>k),\n      datasets:[{label:'Downtime (min)', data:sorted.map(([,v])=>v.dt),\n        backgroundColor:C.orange, borderRadius:2, barThickness:16,\n        datalabels:{display:true, anchor:'end', align:'right', offset:2, color:'#E8EDF5', font:{size:10, weight:'700'}, formatter:v=>fmt(v)}}]},\n    options:{ indexAxis:'y', maintainAspectRatio:false,\n      plugins:{legend:{display:false},\n        tooltip:{callbacks:{afterLabel:ctx=>`${sorted[ctx.dataIndex][1].occ} stoppages`}}},\n      scales:{x:{beginAtZero:true,title:{display:true,text:'minutes'},grace:'12%'}, y:{ticks:{font:{size:11}},grid:{display:false}}}}\n  });\n}\n\nfunction renderScatter(){\n  if(!CHARTS_OK) return;\n  destroy('scatter');\n  const f = agg(rows(),'fault');\n  const pts = Object.entries(f).map(([k,v])=>({x:v.occ, y:v.dt, fault:k, chronic:NW>1 && v.weeks.size===NW}));\n  const top5 = new Set(pts.slice().sort((a,b)=>b.y-a.y).slice(0,5).map(p=>p.fault));\n  const lbl = {display:ctx=>top5.has(ctx.dataset.data[ctx.dataIndex].fault), align:'top', offset:4, color:'#E8EDF5', font:{size:10, weight:'700'}, formatter:(v)=>v.fault};\n  charts.scatter = new Chart(document.getElementById('scatter'),{\n    type:'scatter',\n    data:{datasets:[\n      {label:'Chronic (all 3 weeks)', data:pts.filter(p=>p.chronic), backgroundColor:C.orange, pointRadius:6, pointHoverRadius:8, datalabels:lbl},\n      {label:'Intermittent', data:pts.filter(p=>!p.chronic), backgroundColor:C.cyan+'99', pointRadius:5, pointHoverRadius:7, datalabels:lbl}\n    ]},\n    options:{ maintainAspectRatio:false,\n      plugins:{ tooltip:{callbacks:{label:ctx=>`${ctx.raw.fault}: ${ctx.raw.y} min \u00b7 ${ctx.raw.x} stoppages`}},\n        legend:{labels:{boxWidth:12}}},\n      scales:{ x:{type:'logarithmic',title:{display:true,text:'stoppages (log)'}},\n        y:{type:'logarithmic',title:{display:true,text:'downtime min (log)'}}}}\n  });\n}\n\nfunction renderTrend(){\n  if(!CHARTS_OK) return;\n  destroy('trend');\n  const wks = WEEKS;\n  const dt = wks.map(w=>DATA.filter(r=>r.cw===w).reduce((s,r)=>s+r.dt,0));\n  const occ = wks.map(w=>DATA.filter(r=>r.cw===w).reduce((s,r)=>s+r.occ,0));\n  charts.trend = new Chart(document.getElementById('trend'),{\n    data:{ labels:wks.map(w=>'CW '+w),\n      datasets:[\n        {type:'bar',label:'Downtime (min)',data:dt,backgroundColor:WEEKS.map(w=> String(w)===String(wkFilter)||wkFilter==='all'?C.orange:C.orange+'44'),borderRadius:3,barThickness:Math.max(24, Math.min(70, 320/NW)),yAxisID:'y',\n         datalabels:{display:true, anchor:'end', align:'top', color:'#E8EDF5', font:{size:12, weight:'800'}, formatter:v=>fmt(v)+' min'}},\n        {type:'line',label:'Stoppages',data:occ,borderColor:C.cyan,backgroundColor:C.cyan,pointRadius:5,tension:.3,yAxisID:'y2',\n         datalabels:{display:true, align:'top', offset:8, color:C.cyan, font:{size:11, weight:'700'}, formatter:v=>fmt(v)+' stops'}}\n      ]},\n    options:{maintainAspectRatio:false,\n      plugins:{legend:{labels:{boxWidth:12}}},\n      scales:{y:{beginAtZero:true,title:{display:true,text:'minutes'},grace:'12%'},\n        y2:{position:'right',beginAtZero:true,grid:{display:false},title:{display:true,text:'stoppages'},grace:'15%'}}}\n  });\n}\n\nfunction heatColor(v,max){\n  if(!v) return 'var(--panel-2)';\n  const t = Math.min(1, v/max);\n  const alpha = .18 + t*.82;\n  return `rgba(205,59,0,${alpha.toFixed(2)})`;\n}\n\nfunction renderRecur(){\n  const f = agg(DATA,'fault');\n  const rep = Object.entries(f).filter(([,v])=>v.weeks.size>=2).sort((a,b)=>{\n    const aChronic = NW>1 && a[1].weeks.size===NW;\n    const bChronic = NW>1 && b[1].weeks.size===NW;\n    if(aChronic !== bChronic) return aChronic ? -1 : 1;\n    return b[1].dt - a[1].dt;\n  });\n  const max = Math.max(...rep.map(([,v])=>Math.max(...Object.values(v.byweek))));\n  const tb = document.querySelector('#recur tbody');\n  const chronicCount = rep.filter(([,v])=>NW>1 && v.weeks.size===NW).length;\n  const rowsArr = rep.map(([k,v])=>{\n    const cells = WEEKS.map(w=>{\n      const val = v.byweek[w]||0;\n      return `<div class=\"wk-cell\" style=\"background:${heatColor(val,max)};border-color:${val?'transparent':'var(--line)'}\" title=\"CW${w}: ${val} min\">${val||'\u00b7'}<\/div>`;\n    }).join('');\n    const badge = (NW>1 && v.weeks.size===NW) ? '<span class=\"badge chronic\">Chronic<\/span>' : '';\n    return `<tr class=\"${(NW>1 && v.weeks.size===NW)?'is-chronic':''}\">\n      <td class=\"fault-name\">${k}<\/td>\n      <td class=\"asset-tag\">${v.asset||'\u2014'}<\/td>\n      <td><div class=\"wk-strip\">${cells}<\/div><\/td>\n      <td class=\"num\">${fmt(v.dt)}<\/td>\n      <td class=\"num\">${fmt(v.occ)}<\/td>\n      <td class=\"num\">${(v.dt/v.occ).toFixed(1)}<\/td>\n      <td>${badge}<\/td><\/tr>`;\n  });\n  if(chronicCount>0 && chronicCount<rep.length){\n    rowsArr.splice(chronicCount, 0, '<tr class=\"recur-divider\"><td colspan=\"7\">Recurring \u2014 logged in 2+ weeks, not every week<\/td><\/tr>');\n  }\n  tb.innerHTML = rowsArr.join('');\n}\n\nfunction renderInsights(){\n  const total = DATA.reduce((s,r)=>s+r.dt,0) || 1;\n  const totOcc = DATA.reduce((s,r)=>s+r.occ,0);\n  const f = agg(DATA,'fault');\n  const entries = Object.entries(f);\n  const cards = [];\n\n  // 1. Top loss driver\n  const top = entries.slice().sort((a,b)=>b[1].dt-a[1].dt)[0];\n  if(top) cards.push(`<div class=\"insight\"><div class=\"tag\">Top loss driver<\/div><h3>${top[0]}<\/h3>\n    <p><b>${fmt(top[1].dt)} min (${(top[1].dt/total*100).toFixed(0)}% of all downtime)<\/b> across ${fmt(top[1].occ)} stoppages${top[1].asset&&top[1].asset!=='Unassigned'?' on '+top[1].asset:''}. This is the single biggest lever \u2014 start the root-cause work here.<\/p><\/div>`);\n\n  // 2. Chronic faults (every week)\n  if(NW>1){\n    const chron = entries.filter(([,v])=>v.weeks.size===NW).sort((a,b)=>b[1].dt-a[1].dt);\n    if(chron.length){\n      const c0 = chron[0];\n      cards.push(`<div class=\"insight\"><div class=\"tag\">Chronic \u00b7 every week<\/div><h3>${chron.length} fault${chron.length>1?'s':''} never go away<\/h3>\n      <p>Logged in all ${NW} weeks. Worst: <b>${c0[0]} \u2014 ${fmt(c0[1].dt)} min<\/b>. Chronic recurrence means current controls aren't working \u2014 these need structured problem-solving (FMEA / 5 Whys), not repeat repairs.<\/p><\/div>`);\n    }\n  }\n\n  // 3. Biggest week-on-week spike\n  if(NW>1){\n    let spike=null;\n    entries.forEach(([k,v])=>{\n      const vals = WEEKS.map(w=>v.byweek[w]||0);\n      const mx = Math.max(...vals);\n      const rest = vals.filter(x=>x!==mx);\n      const base = rest.length? Math.max(...rest) : 0;\n      const delta = mx - base;\n      if(mx>=30 && delta>0 && (!spike || delta>spike.delta)) spike = {k, delta, mx, wk:WEEKS[vals.indexOf(mx)], asset:v.asset};\n    });\n    if(spike) cards.push(`<div class=\"insight\"><div class=\"tag\">Spike \u00b7 CW${spike.wk}<\/div><h3>${spike.k}<\/h3>\n      <p>Jumped to <b>${fmt(spike.mx)} min in CW${spike.wk}<\/b> \u2014 ${fmt(spike.delta)} min above its next-worst week${spike.asset&&spike.asset!=='Unassigned'?' ('+spike.asset+')':''}. A step-change like this usually has a single findable cause \u2014 good 8D candidate.<\/p><\/div>`);\n  }\n\n  // 4. Micro-stop nuisance (high frequency, short duration)\n  const micro = entries.filter(([,v])=>v.occ>=20 && v.dt/v.occ < 5).sort((a,b)=>b[1].occ-a[1].occ)[0];\n  if(micro) cards.push(`<div class=\"insight\"><div class=\"tag\">Micro-stops<\/div><h3>${micro[0]}<\/h3>\n    <p><b>${fmt(micro[1].occ)} stoppages at just ${(micro[1].dt/micro[1].occ).toFixed(1)} min each<\/b> (${fmt(micro[1].dt)} min total). High-frequency short stops point to flow, sensors or minor jams \u2014 cheap fixes with high nuisance value.<\/p><\/div>`);\n\n  // 5. Busiest asset cluster\n  const a = agg(DATA,'asset');\n  const worstAsset = Object.entries(a).filter(([k])=>k && k!=='Unassigned' && k!=='GAP').sort((x,y)=>y[1].dt-x[1].dt)[0];\n  if(worstAsset){\n    const nfa = new Set(DATA.filter(r=>r.asset===worstAsset[0]).map(r=>r.fault)).size;\n    cards.push(`<div class=\"insight\"><div class=\"tag\">Asset cluster<\/div><h3>${worstAsset[0]}<\/h3>\n    <p>Carries <b>${fmt(worstAsset[1].dt)} min across ${nfa} fault type${nfa>1?'s':''}<\/b> (${fmt(worstAsset[1].occ)} stops). Multiple fault types on one asset justify a focused PM / condition review rather than fault-by-fault firefighting.<\/p><\/div>`);\n  }\n\n  // 6. Data quality\n  const un = DATA.filter(r=>!r.asset || r.asset==='Unassigned' || r.asset==='(unspecified)');\n  if(un.length){\n    const undt = un.reduce((s,r)=>s+r.dt,0);\n    const unf = new Set(un.map(r=>r.fault)).size;\n    cards.push(`<div class=\"insight\"><div class=\"tag\">Data quality<\/div><h3>Unassigned assets<\/h3>\n    <p><b>${unf} fault type${unf>1?'s':''} (${fmt(undt)} min)<\/b> have no asset in the source data. Mapping every fault code to an asset is step one for asset-level accountability.<\/p><\/div>`);\n  }\n\n  document.getElementById('insights').innerHTML = cards.join('');\n}\n\nfunction renderAll(){\n  // data-driven UI must render even if charting fails\n  try{ renderKPIs(); }catch(e){ console.warn(\"renderKPIs failed:\", e); }\n  try{ renderRecur(); }catch(e){ console.warn(\"renderRecur failed:\", e); }\n  try{ renderInsights(); }catch(e){ console.warn(\"renderInsights failed:\", e); }\n  // charts are best-effort\n  if(CHARTS_OK){\n    try{ renderPareto(); }catch(e){ console.warn(\"renderPareto failed:\", e); }\n    try{ renderAssets(); }catch(e){ console.warn(\"renderAssets failed:\", e); }\n    try{ renderScatter(); }catch(e){ console.warn(\"renderScatter failed:\", e); }\n    try{ renderTrend(); }catch(e){ console.warn(\"renderTrend failed:\", e); }\n  } else {\n    showChartWarning();\n  }\n}\nfunction showChartWarning(){\n  const els = ['pareto','assets','scatter','trend'].map(id=>document.getElementById(id)).filter(Boolean);\n  els.forEach(el=>{ if(!el.dataset.warned){ el.dataset.warned=\"1\";\n    el.insertAdjacentHTML('afterbegin','<div style=\"padding:14px;background:rgba(229,72,77,.12);border:1px solid var(--red);border-radius:4px;font-size:12px;color:var(--red);margin-bottom:10px;\">Chart library did not load \u2014 check your internet connection and reload. Tables and KPIs above are unaffected.<\/div>'); }\n  });\n}\ndocument.getElementById('filters').addEventListener('click',e=>{\n  const b = e.target.closest('button'); if(!b) return;\n  document.querySelectorAll('#filters button').forEach(x=>x.classList.remove('active'));\n  b.classList.add('active'); wkFilter = b.dataset.wk; renderAll();\n});\n\nrenderAll();\n<\/script>\n<\/body>\n<\/html>\n";
+const HALDEN_DEFAULT = [{"cw": 27, "fault": "Air Pressure", "dt": 51.0, "occ": 2, "asset": "PP After Burner TNV"}, {"cw": 27, "fault": "Big Bag Station - PB2", "dt": 15.0, "occ": 6, "asset": "PP Powder Booth PK2 Grey"}, {"cw": 27, "fault": "Big Bag Station - PB3", "dt": 5.0, "occ": 2, "asset": "PP Powder Booth PK3 Clear"}, {"cw": 27, "fault": "Cleaning - BC", "dt": 9.0, "occ": 5, "asset": "PP BC SprayBooth"}, {"cw": 27, "fault": "Cleaning - PB1", "dt": 2.0, "occ": 1, "asset": "PP Powder Booth PK1 Colour"}, {"cw": 27, "fault": "Cleaning - PB2", "dt": 3.0, "occ": 1, "asset": "PP Powder Booth PK2 Grey"}, {"cw": 27, "fault": "Crash - T1", "dt": 104.0, "occ": 26, "asset": "PP T1"}, {"cw": 27, "fault": "E-Stop - C5", "dt": 20.0, "occ": 7, "asset": "PP CircularConveyor 05"}, {"cw": 27, "fault": "Gap", "dt": 401.0, "occ": 253, "asset": "GAP"}, {"cw": 27, "fault": "Gear Pump - BC", "dt": 19.0, "occ": 6, "asset": "PP BC SprayBooth"}, {"cw": 27, "fault": "Gear Pump - CC", "dt": 7.0, "occ": 3, "asset": "PP CC SprayBooth"}, {"cw": 27, "fault": "Gripper Close NOK - T2", "dt": 48.0, "occ": 1, "asset": "PP T2"}, {"cw": 27, "fault": "Gripper Electrical", "dt": 5.0, "occ": 1, "asset": "PP T0"}, {"cw": 27, "fault": "Gripper Mechanical", "dt": 9.0, "occ": 2, "asset": "PP T3"}, {"cw": 27, "fault": "Gripper Open NOK - T1", "dt": 7.0, "occ": 4, "asset": "PP T1"}, {"cw": 27, "fault": "Gripper Open NOK - T2", "dt": 2.0, "occ": 1, "asset": "PP T2"}, {"cw": 27, "fault": "Gripper Open NOK - T3", "dt": 18.0, "occ": 9, "asset": "PP T2"}, {"cw": 27, "fault": "Hanger Skew", "dt": 58.0, "occ": 11, "asset": "PP CircularConveyor 01"}, {"cw": 27, "fault": "High Voltage - BC", "dt": 9.0, "occ": 7, "asset": "PP BC SprayBooth"}, {"cw": 27, "fault": "High Voltage - CC", "dt": 17.0, "occ": 5, "asset": "PP CC SprayBooth"}, {"cw": 27, "fault": "Homing Proxy Sensors", "dt": 119.0, "occ": 52, "asset": "Unassigned"}, {"cw": 27, "fault": "Masking Robot", "dt": 7.0, "occ": 4, "asset": "PP Robot Fanuk Masking"}, {"cw": 27, "fault": "Network Error", "dt": 1.0, "occ": 3, "asset": "Unassigned"}, {"cw": 27, "fault": "Photosensor - C2", "dt": 2.0, "occ": 1, "asset": "Unassigned"}, {"cw": 27, "fault": "Photosensor - C3", "dt": 2.0, "occ": 1, "asset": "Unassigned"}, {"cw": 27, "fault": "Powder Centre - PB2", "dt": 22.0, "occ": 8, "asset": "PP Powder Booth PK2 Grey"}, {"cw": 27, "fault": "Powder Centre - PB3", "dt": 3.0, "occ": 1, "asset": "PP Powder Booth PK3 Clear"}, {"cw": 27, "fault": "Power Dip", "dt": 2.0, "occ": 2, "asset": "Unassigned"}, {"cw": 27, "fault": "Run Dry", "dt": 112.0, "occ": 1, "asset": "PRETREAT ZONE 1"}, {"cw": 27, "fault": "Sample Developement", "dt": 6.0, "occ": 1, "asset": "Unassigned"}, {"cw": 27, "fault": "Synchronization Unit", "dt": 13.0, "occ": 5, "asset": "PP T1"}, {"cw": 27, "fault": "Traffic Jam", "dt": 286.0, "occ": 152, "asset": "Traffic Jam"}, {"cw": 27, "fault": "Unscheduled", "dt": 978.0, "occ": 5, "asset": "Unassigned"}, {"cw": 27, "fault": "Vacuum Failure", "dt": 6.0, "occ": 3, "asset": "Unassigned"}, {"cw": 27, "fault": "VS - Change Brushes", "dt": 3.0, "occ": 2, "asset": "Unassigned"}, {"cw": 27, "fault": "VS - Cleaning", "dt": 2.0, "occ": 2, "asset": "Unassigned"}, {"cw": 27, "fault": "Wheels Stop In Front", "dt": 14.0, "occ": 4, "asset": "EOL"}, {"cw": 27, "fault": "Wire Rope", "dt": 4.0, "occ": 1, "asset": "Unassigned"}, {"cw": 27, "fault": "Wrong Wheel Data", "dt": 4.0, "occ": 1, "asset": "Unassigned"}, {"cw": 28, "fault": "Big Bag Station - PB2", "dt": 6.0, "occ": 3, "asset": "PP Powder Booth PK2 Grey"}, {"cw": 28, "fault": "Cleaning - BC", "dt": 28.0, "occ": 13, "asset": "PP BC SprayBooth"}, {"cw": 28, "fault": "Cleaning - CC", "dt": 7.0, "occ": 2, "asset": "PP CC SprayBooth"}, {"cw": 28, "fault": "Cleaning - PB2", "dt": 14.0, "occ": 6, "asset": "PP Powder Booth PK2 Grey"}, {"cw": 28, "fault": "Crash - T1", "dt": 4.0, "occ": 2, "asset": "PP T1"}, {"cw": 28, "fault": "Crash - T2", "dt": 18.0, "occ": 1, "asset": "PP T2"}, {"cw": 28, "fault": "Dropped Wheels - T1", "dt": 4.0, "occ": 1, "asset": "PP T1"}, {"cw": 28, "fault": "E-Stop - C3", "dt": 1.0, "occ": 1, "asset": "Unassigned"}, {"cw": 28, "fault": "Filter Change", "dt": 20.0, "occ": 1, "asset": "PP CC SprayBooth"}, {"cw": 28, "fault": "Filter Pressure - BC", "dt": 9.0, "occ": 1, "asset": "PP BC SprayBooth"}, {"cw": 28, "fault": "Filter Pressure - CC", "dt": 14.0, "occ": 1, "asset": "PP CC SprayBooth"}, {"cw": 28, "fault": "Gap", "dt": 423.0, "occ": 280, "asset": "GAP"}, {"cw": 28, "fault": "Gear Pump - BC", "dt": 19.0, "occ": 3, "asset": "PP BC SprayBooth"}, {"cw": 28, "fault": "Gear Pump - CC", "dt": 9.0, "occ": 5, "asset": "PP CC SprayBooth"}, {"cw": 28, "fault": "Gripper Mechanical", "dt": 5.0, "occ": 3, "asset": "PP T3"}, {"cw": 28, "fault": "Gripper Open NOK - T1", "dt": 9.0, "occ": 3, "asset": "PP T1"}, {"cw": 28, "fault": "Gripper Open NOK - T3", "dt": 9.0, "occ": 2, "asset": "PP T3"}, {"cw": 28, "fault": "Hanger Skew", "dt": 12.0, "occ": 5, "asset": "PP CircularConveyor 01"}, {"cw": 28, "fault": "High Voltage - BC", "dt": 16.0, "occ": 8, "asset": "PP BC SprayBooth"}, {"cw": 28, "fault": "High Voltage - CC", "dt": 7.0, "occ": 4, "asset": "PP CC SprayBooth"}, {"cw": 28, "fault": "Network Error", "dt": 0.0, "occ": 1, "asset": "Unassigned"}, {"cw": 28, "fault": "Powder Centre - PB2", "dt": 23.0, "occ": 9, "asset": "PP Powder Booth PK2 Grey"}, {"cw": 28, "fault": "Sample Developement", "dt": 1.0, "occ": 1, "asset": "Unassigned"}, {"cw": 28, "fault": "Synchronization Unit", "dt": 31.0, "occ": 16, "asset": "PP T1"}, {"cw": 28, "fault": "Traffic Jam", "dt": 463.0, "occ": 254, "asset": "Traffic Jam"}, {"cw": 28, "fault": "Vacuum Failure", "dt": 5.0, "occ": 4, "asset": "Unassigned"}, {"cw": 28, "fault": "VS - Change Brushes", "dt": 2.0, "occ": 1, "asset": "Unassigned"}, {"cw": 28, "fault": "Wire Rope", "dt": 3.0, "occ": 1, "asset": "Unassigned"}, {"cw": 29, "fault": "Air Pressure", "dt": 374.0, "occ": 3, "asset": "PP After Burner TNV"}, {"cw": 29, "fault": "Air Pressure Insufficient", "dt": 1.0, "occ": 1, "asset": "Unassigned"}, {"cw": 29, "fault": "Big Bag Station - PB2", "dt": 8.0, "occ": 3, "asset": "PP Powder Booth PK2 Grey"}, {"cw": 29, "fault": "Cleaning - BC", "dt": 34.0, "occ": 16, "asset": "PP BC SprayBooth"}, {"cw": 29, "fault": "Cleaning - PB2", "dt": 6.0, "occ": 4, "asset": "PP Powder Booth PK2 Grey"}, {"cw": 29, "fault": "Crash - T1", "dt": 14.0, "occ": 5, "asset": "PP T1"}, {"cw": 29, "fault": "Dropped Wheels - T0", "dt": 4.0, "occ": 1, "asset": "PP T0"}, {"cw": 29, "fault": "E-Stop - C1", "dt": 5.0, "occ": 1, "asset": "Unassigned"}, {"cw": 29, "fault": "Filter Pressure - BC", "dt": 9.0, "occ": 1, "asset": "PP BC SprayBooth"}, {"cw": 29, "fault": "Gap", "dt": 329.0, "occ": 212, "asset": "GAP"}, {"cw": 29, "fault": "Gear Pump - BC", "dt": 7.0, "occ": 2, "asset": "PP BC SprayBooth"}, {"cw": 29, "fault": "Gear Pump - CC", "dt": 4.0, "occ": 2, "asset": "PP CC SprayBooth"}, {"cw": 29, "fault": "Gripper Close NOK - T1", "dt": 13.0, "occ": 2, "asset": "PP T1"}, {"cw": 29, "fault": "Gripper Mechanical", "dt": 17.0, "occ": 3, "asset": "PP T3"}, {"cw": 29, "fault": "Gripper Open NOK - T1", "dt": 2.0, "occ": 1, "asset": "PP T1"}, {"cw": 29, "fault": "Gripper Open NOK - T2", "dt": 10.0, "occ": 8, "asset": "PP T2"}, {"cw": 29, "fault": "Gripper Open NOK - T3", "dt": 1.0, "occ": 1, "asset": "PP T3"}, {"cw": 29, "fault": "Hanger Skew", "dt": 23.0, "occ": 10, "asset": "PP CircularConveyor 01"}, {"cw": 29, "fault": "High Voltage - BC", "dt": 8.0, "occ": 4, "asset": "PP BC SprayBooth"}, {"cw": 29, "fault": "High Voltage - CC", "dt": 4.0, "occ": 2, "asset": "PP CC SprayBooth"}, {"cw": 29, "fault": "Homing Proxy Sensors", "dt": 11.0, "occ": 7, "asset": "Unassigned"}, {"cw": 29, "fault": "Network Error", "dt": 1.0, "occ": 5, "asset": "Unassigned"}, {"cw": 29, "fault": "Photosensor - C3", "dt": 5.0, "occ": 2, "asset": "PP CircularConveyor 03"}, {"cw": 29, "fault": "Photosensor - C4", "dt": 1.0, "occ": 1, "asset": "PP CircularConveyor 04"}, {"cw": 29, "fault": "Powder Centre - PB2", "dt": 1.0, "occ": 1, "asset": "PP Powder Booth PK2 Grey"}, {"cw": 29, "fault": "Power Dip", "dt": 63.0, "occ": 2, "asset": "Unassigned"}, {"cw": 29, "fault": "Robot E-Stop", "dt": 1.0, "occ": 1, "asset": "Unassigned"}, {"cw": 29, "fault": "Sample Developement", "dt": 14.0, "occ": 2, "asset": "Unassigned"}, {"cw": 29, "fault": "Synchronization Unit", "dt": 14.0, "occ": 8, "asset": "PP T1"}, {"cw": 29, "fault": "Traffic Jam", "dt": 251.0, "occ": 129, "asset": "Traffic Jam"}, {"cw": 29, "fault": "Vacuum Failure", "dt": 8.0, "occ": 4, "asset": "Unassigned"}, {"cw": 29, "fault": "VS - Change Brushes", "dt": 4.0, "occ": 2, "asset": "Unassigned"}, {"cw": 29, "fault": "Wheels Stop In Front", "dt": 18.0, "occ": 2, "asset": "EOL"}, {"cw": 29, "fault": "Wire Rope", "dt": 7.0, "occ": 1, "asset": "Unassigned"}];
+let haldenData = null; // null -> default
+function renderHalden(){
+  const fr = document.getElementById("haldenFrame");
+  if(!fr) return;
+  const data = (haldenData && haldenData.length) ? haldenData : HALDEN_DEFAULT;
+  fr.srcdoc = HALDEN_TEMPLATE.replace("__HALDEN_DATA__", JSON.stringify(data));
+  const st = document.getElementById("haldenStatus");
+  if(st) st.textContent = (haldenData && haldenData.length)
+    ? haldenData.length + " records (uploaded data)"
+    : HALDEN_DEFAULT.length + " records (built-in CW27–29 sample)";
+}
+function haldenHeaderMap(headers){
+  const map = {};
+  headers.forEach((h,i)=>{
+    const k = String(h||"").toLowerCase();
+    if(map.cw===undefined && (/(^|\b)(cw|week|kw|calendar)/.test(k))) map.cw = i;
+    else if(map.fault===undefined && /fault|failure|description|reason/.test(k)) map.fault = i;
+    else if(map.dt===undefined && /downtime|duration|min|dt/.test(k)) map.dt = i;
+    else if(map.occ===undefined && /occ|count|events|frequency|qty/.test(k)) map.occ = i;
+    else if(map.asset===undefined && /asset|equipment|machine|station/.test(k)) map.asset = i;
+  });
+  return map;
+}
+function haldenUpload(input){
+  const f = input.files && input.files[0];
+  input.value = "";
+  if(!f) return;
+  loadXLSX().then(()=>{
+    const rd = new FileReader();
+    rd.onload = ()=>{
+      try{
+        const wb = XLSX.read(rd.result, {type:"array"});
+        const rows = [];
+        const badSheets = [];
+        wb.SheetNames.forEach(sn=>{
+          const ws = wb.Sheets[sn];
+          const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+          let hi = -1, map = null;
+          for(let r=0; r<Math.min(6,aoa.length); r++){
+            const m2 = haldenHeaderMap(aoa[r]);
+            if(m2.fault!==undefined && m2.dt!==undefined){ hi=r; map=m2; break; }
+          }
+          if(hi<0){ if(aoa.length) badSheets.push(sn); return; }
+          // calendar week fallback: from sheet name e.g. "CW 30"
+          const snWk = (sn.match(/(\d+)/)||[])[1];
+          for(let r=hi+1; r<aoa.length; r++){
+            const row = aoa[r];
+            const fault = String(row[map.fault]||"").trim();
+            const asset = map.asset!==undefined ? String(row[map.asset]||"").trim() : "";
+            const dt = parseFloat(row[map.dt]);
+            if(!fault && !asset) continue;
+            if(isNaN(dt) && !(map.occ!==undefined && row[map.occ]!=="")) continue;
+            let cw = map.cw!==undefined ? parseInt(row[map.cw]) : NaN;
+            if(isNaN(cw) || !cw) cw = snWk ? parseInt(snWk) : 0;
+            rows.push({
+              cw: cw||0,
+              fault: fault || "(unspecified)",
+              dt: isNaN(dt)?0:dt,
+              occ: map.occ!==undefined ? (parseInt(row[map.occ])||0) : 0,
+              asset: asset || "Unassigned"
+            });
+          }
+        });
+        if(!rows.length){ alert("No data rows found. Each sheet needs at least Fault and Downtime columns (CW can come from the sheet name, e.g. 'CW 30')."); return; }
+        haldenData = rows;
+        renderHalden();
+        scheduleSave();
+        const wkList = [...new Set(rows.map(x=>x.cw))].filter(w=>w>0).sort((a,b)=>a-b);
+        alert("Dashboard updated: " + rows.length + " records from " + wb.SheetNames.length + " sheet(s)" +
+          (wkList.length? " — calendar weeks " + wkList.join(", ") : "") +
+          (badSheets.length? "\nSkipped (no header found): " + badSheets.join(", ") : "") + ".");
+      }catch(e){ alert("Could not read that file: " + e.message); }
+    };
+    rd.readAsArrayBuffer(f);
+  }).catch(()=>alert("Excel reader needs an internet connection the first time. Please retry."));
+}
+
+/* ---------- Tab 2: Pareto downtime ---------- */
+let parRows = [
+  {name:"Compressor — Line 1", dt:0, ev:0},
+  {name:"CNC Machine 04", dt:0, ev:0},
+  {name:"Forklift FL-102", dt:0, ev:0},
+  {name:"HVAC Plant Room", dt:0, ev:0},
+  {name:"Conveyor System A", dt:0, ev:0}
+];
+const PAR_LABEL = {dt:"Downtime (min)", ev:"No. of events"};
+
+function parMode(){ const el=document.getElementById("paretoMode"); return el?el.value:"dt"; }
+
+function renderPareto(){
+  const mode = parMode();
+  const sorted = parRows.map((r,i)=>({r,i})).sort((a,b)=>(b.r[mode]||0)-(a.r[mode]||0));
+  const total = sorted.reduce((s,x)=>s+(+x.r[mode]||0),0);
+
+  // ---- table ----
+  const tbl = document.getElementById("paretoTable");
+  let html = `<tr><th style="width:36px;">#</th><th>Asset</th><th style="text-align:right;">Downtime (min)</th><th style="text-align:right;">Events</th><th style="text-align:right;">% of total</th><th style="text-align:right;">Cum. %</th><th></th></tr>`;
+  let cum = 0;
+  sorted.forEach((x,rank)=>{
+    const v = +x.r[mode]||0;
+    const pct = total ? v/total*100 : 0;
+    cum += pct;
+    const vital = total>0 && (cum<=80 || (cum-pct)<80) && v>0;
+    html += `<tr class="${vital?'vital':''}">
+      <td style="text-align:center;vertical-align:middle;"><span class="rankbadge">${rank+1}</span></td>
+      <td class="aname"><input value="${esc(x.r.name)}" oninput="parRows[${x.i}].name=this.value"></td>
+      <td class="num"><input type="number" min="0" step="1" value="${x.r.dt||''}" onchange="parRows[${x.i}].dt=+this.value||0;renderPareto()"></td>
+      <td class="num"><input type="number" min="0" step="1" value="${x.r.ev||''}" onchange="parRows[${x.i}].ev=+this.value||0;renderPareto()"></td>
+      <td class="calc">${total?pct.toFixed(1):"0.0"}%</td>
+      <td class="calc"><span class="cum">${total?Math.min(cum,100).toFixed(1):"0.0"}%</span></td>
+      <td class="rm"><button class="del" style="margin:0;" onclick="removeParetoRow(${x.i})">✕</button></td>
+    </tr>`;
+  });
+  html += `<tr><td></td><td style="padding:8px;font-weight:800;color:var(--navy);">TOTAL</td>
+    <td class="calc">${sorted.reduce((s,x)=>s+(+x.r.dt||0),0)}</td>
+    <td class="calc">${sorted.reduce((s,x)=>s+(+x.r.ev||0),0)}</td>
+    <td class="calc">100%</td><td></td><td></td></tr>`;
+  tbl.innerHTML = html;
+
+  // ---- chart (SVG) ----
+  document.getElementById("parChartTitle").textContent = PAR_LABEL[mode] + " Pareto";
+  const data = sorted.filter(x=>(+x.r[mode]||0)>0);
+  const box = document.getElementById("paretoChart");
+  if(!data.length || !total){ box.innerHTML = '<div style="padding:40px 10px;text-align:center;color:#8B8677;font-size:12.5px;">Enter values to draw the Pareto curve.</div>'; return; }
+  const W=560, H=300, padL=44, padR=44, padT=14, padB=64;
+  const cw = (W-padL-padR)/data.length;
+  const maxV = Math.max(...data.map(x=>+x.r[mode]||0));
+  let bars="", line="", labels="", cum2=0, pts=[];
+  data.forEach((x,i)=>{
+    const v=+x.r[mode]||0, pct=v/total*100;
+    const prev=cum2; cum2+=pct;
+    const bh=(v/maxV)*(H-padT-padB);
+    const bx=padL+i*cw+cw*0.14, bw=cw*0.72;
+    const vital = (prev)<80;
+    bars += `<rect x="${bx}" y="${H-padB-bh}" width="${bw}" height="${bh}" rx="3" fill="${vital?'#CD3B00':'#C8C2B4'}"/>`;
+    bars += `<text x="${bx+bw/2}" y="${H-padB-bh-5}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1A2539">${v}</text>`;
+    const cx=bx+bw/2, cy=padT+(1-cum2/100)*(H-padT-padB);
+    pts.push([cx,cy]);
+    let nm = x.r.name.length>14 ? x.r.name.slice(0,13)+"…" : x.r.name;
+    labels += `<text x="${cx}" y="${H-padB+12}" text-anchor="end" font-size="9" fill="#5C5A50" transform="rotate(-38 ${cx} ${H-padB+12})">${nm.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</text>`;
+  });
+  line = "M"+pts.map(p=>p.join(",")).join(" L");
+  const dots = pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.4" fill="#1A2539"/>`).join("");
+  const y80 = padT+(1-0.8)*(H-padT-padB);
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#D8D3C8"/>
+    <line x1="${padL}" y1="${y80}" x2="${W-padR}" y2="${y80}" stroke="#DF6C01" stroke-dasharray="5 4" stroke-width="1.5"/>
+    <text x="${W-padR+3}" y="${y80+3}" font-size="9.5" font-weight="800" fill="#DF6C01">80%</text>
+    ${bars}
+    <path d="${line}" fill="none" stroke="#1A2539" stroke-width="2.2"/>
+    ${dots}
+    ${labels}
+    <text x="${W-padR+3}" y="${padT+6}" font-size="9" fill="#8B8677">100%</text>
+  </svg>`;
+}
+function addParetoRow(){ parRows.push({name:"New Asset", dt:0, ev:0}); renderPareto(); }
+function removeParetoRow(i){ parRows.splice(i,1); if(!parRows.length) addParetoRow(); else renderPareto(); }
+function pullAssetsFromMatrix(){
+  const existing = new Set(parRows.map(r=>r.name.trim().toLowerCase()));
+  assets.forEach(a=>{
+    if(!existing.has(a.name.trim().toLowerCase()))
+      parRows.push({name:a.name, dt:0, ev:0});
+  });
+  renderPareto();
+}
+
+
+/* ---------- Technical availability graph (Action Plans tab) ---------- */
+let taRows = [
+  {p:"Week 1", v:null, pv:null},{p:"Week 2", v:null, pv:null},{p:"Week 3", v:null, pv:null},{p:"Week 4", v:null, pv:null},
+  {p:"Week 5", v:null, pv:null},{p:"Week 6", v:null, pv:null},{p:"Week 7", v:null, pv:null},{p:"Week 8", v:null, pv:null}
+];
+function taTarget(){ const el=document.getElementById("taTarget"); return el? (+el.value||0) : 90; }
+
+function renderTA(){
+  const tbl = document.getElementById("taTable");
+  if(!tbl) return;
+  let html = `<tr><th>Period</th><th style="text-align:right;">Technical Availability %</th><th style="text-align:right;">Paint Overall Availability %</th><th></th></tr>`;
+  taRows.forEach((r,i)=>{
+    html += `<tr>
+      <td><input value="${esc(r.p)}" placeholder="e.g. Week 1 / Jan" oninput="taRows[${i}].p=this.value"></td>
+      <td class="pv"><input type="number" min="0" max="100" step="0.1" value="${r.v==null?'':r.v}" placeholder="—" onchange="taRows[${i}].v=this.value===''?null:+this.value;renderTA()"></td>
+      <td class="pv"><input type="number" min="0" max="100" step="0.1" value="${r.pv==null?'':r.pv}" placeholder="—" onchange="taRows[${i}].pv=this.value===''?null:+this.value;renderTA()"></td>
+      <td class="rm"><button class="del" style="margin:0;" onclick="removeTARow(${i})">✕</button></td>
+    </tr>`;
+  });
+  tbl.innerHTML = html;
+
+  const box = document.getElementById("taChart");
+  const data = taRows.filter(r=>(r.v!=null || r.pv!=null) && r.p.trim()!=="");
+  const tgt = taTarget();
+  if(!data.length){ box.innerHTML = '<div style="padding:50px 10px;text-align:center;color:#8B8677;font-size:12.5px;">Enter availability values to draw the graph.</div>'; return; }
+  const W=620,H=290,padL=44,padR=16,padT=18,padB=52;
+  const n=data.length, cw=(W-padL-padR)/n;
+  const allVals = data.flatMap(d=>[d.v,d.pv].filter(x=>x!=null));
+  const vmin = Math.max(0, Math.min(tgt, ...allVals) - 8);
+  const y = v => padT + (1-(v-vmin)/(100-vmin))*(H-padT-padB);
+  let bars="", pts=[], ppts=[], labels="", grid="";
+  for(let gv=Math.ceil(vmin/10)*10; gv<=100; gv+=10){
+    grid += `<line x1="${padL}" y1="${y(gv)}" x2="${W-padR}" y2="${y(gv)}" stroke="#EDEAE1"/>
+             <text x="${padL-6}" y="${y(gv)+3}" text-anchor="end" font-size="9" fill="#8B8677">${gv}</text>`;
+  }
+  data.forEach((d,i)=>{
+    const bx=padL+i*cw+cw*0.18, bw=cw*0.64;
+    if(d.v!=null){
+      const by=y(d.v);
+      const ok = d.v>=tgt;
+      bars += `<rect x="${bx}" y="${by}" width="${bw}" height="${H-padB-by}" rx="3" fill="${ok?'#2E7D4F':'#CD3B00'}" opacity="0.9"/>`;
+      bars += `<text x="${bx+bw/2}" y="${by-5}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1A2539">${d.v}%</text>`;
+      pts.push([bx+bw/2, by]);
+    }
+    if(d.pv!=null) ppts.push([bx+bw/2, y(d.pv), d.pv]);
+    let nm = d.p.length>10 ? d.p.slice(0,9)+"…" : d.p;
+    labels += `<text x="${bx+bw/2}" y="${H-padB+13}" text-anchor="end" font-size="9" fill="#5C5A50" transform="rotate(-35 ${bx+bw/2} ${H-padB+13})">${nm.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</text>`;
+  });
+  const line = pts.length>1 ? `<path d="M${pts.map(p=>p.join(",")).join(" L")}" fill="none" stroke="#1A2539" stroke-width="2"/>` : "";
+  const dots = pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.2" fill="#1A2539"/>`).join("");
+  const pline = ppts.length>1 ? `<path d="M${ppts.map(p=>p[0]+","+p[1]).join(" L")}" fill="none" stroke="#3E7CB1" stroke-width="2.4"/>` : "";
+  const pdots = ppts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.4" fill="#3E7CB1" stroke="#fff" stroke-width="1"/><text x="${p[0]}" y="${p[1]-7}" text-anchor="middle" font-size="8.5" font-weight="800" fill="#3E7CB1">${p[2]}%</text>`).join("");
+  const yt = y(tgt);
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">
+    ${grid}
+    <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#D8D3C8"/>
+    ${bars}${line}${dots}${pline}${pdots}
+    <line x1="${padL}" y1="${yt}" x2="${W-padR}" y2="${yt}" stroke="#DF6C01" stroke-dasharray="6 4" stroke-width="1.8"/>
+    <text x="${W-padR}" y="${yt-5}" text-anchor="end" font-size="9.5" font-weight="800" fill="#DF6C01">Target ${tgt}%</text>
+    ${labels}
+  </svg>
+  <div class="parlegend" style="margin-top:4px;">
+    <span><i style="background:#2E7D4F;"></i>Technical — on/above target</span>
+    <span><i style="background:#CD3B00;"></i>Technical — below target</span>
+    <span><i style="background:#1A2539;border-radius:6px;height:3px;margin-top:5px;"></i>Technical trend</span>
+    <span><i style="background:#3E7CB1;border-radius:6px;height:3px;margin-top:5px;"></i>Paint Overall Availability</span>
+  </div>`;
+}
+function addTARow(){ taRows.push({p:"", v:null, pv:null}); renderTA(); }
+function removeTARow(i){ taRows.splice(i,1); if(!taRows.length) addTARow(); else renderTA(); }
+
+
+/* ---------- Supabase cloud sync ---------- */
+const SB_URL = "https://ycyreswzdkqcnsinkllv.supabase.co";
+const SB_KEY = "sb_publishable_erzIAu_AClg11snl-qiU5w_nWuO_n1Q";
+let sb = null, sbUser = null, cloudTimer = null, lastHistAt = 0;
+
+let needsPassword = false;
+(function detectInviteLink(){
+  const h = window.location.hash || "";
+  if(/type=invite|type=recovery|type=signup/.test(h)) needsPassword = true;
+})();
+function showSetPass(){
+  document.querySelector("#loginPage .lp-form").style.display = "none";
+  document.getElementById("lpWsPick").style.display = "none";
+  document.getElementById("lpSetPass").style.display = "block";
+  if(/type=recovery/.test(window.location.hash||"") )
+    document.getElementById("lpSetPassMsg").textContent = "Choose a new password for your account.";
+  lpUpdate();
+}
+function lpSetPassword(){
+  const err = document.getElementById("lpSetErr");
+  err.textContent = "";
+  const p1 = document.getElementById("lpNewPass").value;
+  const p2 = document.getElementById("lpNewPass2").value;
+  if(p1.length < 8){ err.textContent = "Password must be at least 8 characters."; return; }
+  if(p1 !== p2){ err.textContent = "Passwords do not match."; return; }
+  const btn = document.querySelector("#lpSetPass .lp-btn");
+  btn.disabled = true; btn.textContent = "Saving…";
+  sb.auth.updateUser({password: p1}).then(({error})=>{
+    btn.disabled = false; btn.textContent = "Set password & continue";
+    if(error){ err.textContent = error.message; return; }
+    needsPassword = false;
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    document.getElementById("lpSetPass").style.display = "none";
+    document.querySelector("#loginPage .lp-form").style.display = "block";
+    afterSignIn();
+  });
+}
+function initSupabase(){
+  if(!window.supabase){
+    setAuthUI();
+    const err = document.getElementById("lpErr");
+    if(err) err.textContent = "Cannot reach the sign-in service. Check your internet connection and reload.";
+    return;
+  }
+  sb = window.supabase.createClient(SB_URL, SB_KEY);
+  sb.auth.getSession().then(({data})=>{
+    sbUser = data.session ? data.session.user : null;
+    setAuthUI();
+    if(sbUser){ if(needsPassword) showSetPass(); else afterSignIn(); }
+  });
+  sb.auth.onAuthStateChange((_e, session)=>{
+    const was = !!sbUser;
+    sbUser = session ? session.user : null;
+    if(!sbUser){ currentWs = null; workspaces = []; isAdmin = false;
+    const b=document.getElementById("adminBtn"); if(b) b.style.display="none";
+    const ap=document.getElementById("adminPanel"); if(ap) ap.classList.remove("show"); }
+    setAuthUI();
+    if(_e === "PASSWORD_RECOVERY"){ needsPassword = true; }
+    if(sbUser && !was){ if(needsPassword) showSetPass(); else afterSignIn(); }
+    else if(sbUser && needsPassword){ showSetPass(); }
+  });
+}
+
+
+/* ---------- provider admin panel ---------- */
+let isAdmin = false, adOpenWs = null;
+
+async function checkAdmin(){
+  try{
+    const {data} = await sb.rpc("amtoolkit_is_admin");
+    isAdmin = data === true;
+  }catch(e){ isAdmin = false; }
+  const b = document.getElementById("adminBtn");
+  if(b) b.style.display = isAdmin ? "inline-block" : "none";
+}
+function openAdmin(){ document.getElementById("adminPanel").classList.add("show"); adRefresh(); }
+function closeAdmin(){ document.getElementById("adminPanel").classList.remove("show"); fetchWorkspaces(); }
+function adError(msg){ document.getElementById("adErr").textContent = msg||""; }
+
+async function adRefresh(){
+  adError("");
+  const {data, error} = await sb.rpc("amtoolkit_admin_list_workspaces");
+  if(error){ adError(error.message); return; }
+  const list = document.getElementById("adList");
+  list.innerHTML = (data||[]).map(w=>`
+    <div class="ad-ws${adOpenWs===w.id?' open':''}" id="adws-${w.id}">
+      <div class="ad-ws-head" onclick="adToggleWs('${w.id}')">
+        <span class="nm">${esc(w.name)}</span>
+        <span class="meta">${w.member_count} member${w.member_count==1?"":"s"}</span>
+        <span class="meta">${w.last_activity ? "last activity "+new Date(w.last_activity).toLocaleDateString() : "no activity"}</span>
+      </div>
+      <div class="ad-ws-body" id="adbody-${w.id}"></div>
+    </div>`).join("");
+  if(adOpenWs) adLoadMembers(adOpenWs);
+}
+function adToggleWs(id){
+  adOpenWs = (adOpenWs===id) ? null : id;
+  adRefresh();
+}
+async function adLoadMembers(ws){
+  const body = document.getElementById("adbody-"+ws);
+  if(!body) return;
+  const {data, error} = await sb.rpc("amtoolkit_admin_list_members",{ws});
+  if(error){ body.innerHTML = `<div class="ad-err">${esc(error.message)}</div>`; return; }
+  const rows = (data||[]).map(m=>`
+    <div class="ad-mem">
+      <span class="em">${esc(m.email)}</span>
+      <span class="rl ${m.role}">${m.role}</span>
+      <button class="del" style="margin:0;" title="Remove member" onclick="adRemoveMember('${ws}','${esc(m.email)}')">✕</button>
+    </div>`).join("") || '<div class="ad-hint">No members yet.</div>';
+  body.innerHTML = `
+    ${rows}
+    <div class="ad-add">
+      <input id="adEmail-${ws}" type="email" placeholder="user email (must already exist in Authentication → Users)">
+      <select id="adRole-${ws}"><option value="member">member</option><option value="owner">owner</option></select>
+      <button class="smallbtn" onclick="adAddMember('${ws}')">Add member</button>
+    </div>
+    <div class="ad-actions">
+      <button class="smallbtn" onclick="adRename('${ws}')">Rename workspace</button>
+      <button class="smallbtn" style="border-color:var(--orange);color:var(--orange);" onclick="adDelete('${ws}')">Delete workspace</button>
+    </div>
+    <div class="ad-hint">To onboard a new customer user: create their account in Supabase Dashboard → Authentication → Users (Invite or Create user), then add their email here. Removing a member revokes their access immediately; deleting a workspace permanently removes all its data.</div>`;
+}
+async function adCreateWs(){
+  const inp = document.getElementById("adNewName");
+  const {data, error} = await sb.rpc("amtoolkit_admin_create_workspace",{ws_name: inp.value});
+  if(error){ adError(error.message); return; }
+  inp.value = ""; adOpenWs = data; adRefresh();
+}
+async function adAddMember(ws){
+  const em = document.getElementById("adEmail-"+ws).value;
+  const rl = document.getElementById("adRole-"+ws).value;
+  const {error} = await sb.rpc("amtoolkit_admin_add_member",{ws, member_email:em, member_role:rl});
+  if(error){ adError(error.message); return; }
+  adError(""); adRefresh();
+}
+async function adRemoveMember(ws, em){
+  if(!confirm("Remove "+em+" from this workspace? Their access ends immediately.")) return;
+  const {error} = await sb.rpc("amtoolkit_admin_remove_member",{ws, member_email:em});
+  if(error){ adError(error.message); return; }
+  adRefresh();
+}
+async function adRename(ws){
+  const nm = prompt("New workspace name:");
+  if(!nm) return;
+  const {error} = await sb.rpc("amtoolkit_admin_rename_workspace",{ws, ws_name:nm});
+  if(error){ adError(error.message); return; }
+  adRefresh();
+}
+async function adDelete(ws){
+  if(!confirm("DELETE this workspace and ALL its data permanently? This cannot be undone.")) return;
+  if(!confirm("Are you absolutely sure? All matrix scores, plans and measures in this workspace will be lost.")) return;
+  const {error} = await sb.rpc("amtoolkit_admin_delete_workspace",{ws});
+  if(error){ adError(error.message); return; }
+  adOpenWs = null; adRefresh();
+}
+
+/* ---------- login page ---------- */
+function lpUpdate(){
+  const lp = document.getElementById("loginPage");
+  if(!lp) return;
+  lp.classList.toggle("show", !sbUser || !currentWs);
+}
+function lpSignIn(){
+  const err = document.getElementById("lpErr");
+  err.textContent = "";
+  if(!sb){ err.textContent = "Cloud connection unavailable — check your internet connection."; return; }
+  const email = document.getElementById("lpEmail").value.trim();
+  const pass = document.getElementById("lpPass").value;
+  if(!email || !pass){ err.textContent = "Enter your email and password."; return; }
+  const btn = document.querySelector(".lp-btn");
+  btn.disabled = true; btn.textContent = "Signing in…";
+  sb.auth.signInWithPassword({email, password:pass}).then(({error})=>{
+    btn.disabled = false; btn.textContent = "Sign in";
+    if(error){ err.textContent = error.message; }
+    else { document.getElementById("lpPass").value=""; lpUpdate(); }
+  });
+}
+
+function setAuthUI(){
+  const si = document.getElementById("authSignedIn");
+  if(!si) return;
+  if(sbUser){
+    si.style.display="flex";
+    document.getElementById("authUser").textContent = "☁ " + (sbUser.email||"signed in");
+  } else {
+    si.style.display="none";
+  }
+  lpUpdate();
+}
+function signOut(){ if(sb) sb.auth.signOut(); }
+
+let workspaces = [], currentWs = null;
+
+async function fetchWorkspaces(){
+  const {data, error} = await sb.from("amtoolkit_workspaces").select("id,name").order("name");
+  workspaces = (error || !data) ? [] : data;
+  return workspaces;
+}
+function enterWorkspace(ws){
+  currentWs = ws;
+  document.getElementById("lpWsPick").style.display = "none";
+  document.querySelector("#loginPage .lp-form").style.display = "block";
+  const nm = document.getElementById("wsName");
+  if(nm) nm.textContent = ws.name;
+  const sw = document.getElementById("wsSwitchBtn");
+  if(sw) sw.style.display = workspaces.length>1 ? "inline-block" : "none";
+  lpUpdate();
+  loadCloud();
+}
+function showWsPicker(){
+  const list = document.getElementById("lpWsList");
+  list.innerHTML = workspaces.map((w,i)=>`<button class="lp-ws" onclick="enterWorkspace(workspaces[${i}])">${w.name.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</button>`).join("");
+  document.querySelector("#loginPage .lp-form").style.display = "none";
+  document.getElementById("lpWsPick").style.display = "block";
+  currentWs = null;
+  lpUpdate();
+}
+async function afterSignIn(){
+  checkAdmin();
+  await fetchWorkspaces();
+  const err = document.getElementById("lpErr");
+  if(!workspaces.length){
+    if(err) err.textContent = "Your account has no workspace assigned yet. Please contact your provider.";
+    document.querySelector("#loginPage .lp-form").style.display = "block";
+    document.getElementById("lpWsPick").style.display = "none";
+    return;
+  }
+  if(workspaces.length === 1) enterWorkspace(workspaces[0]);
+  else showWsPicker();
+}
+async function loadCloud(){
+  if(!currentWs) return;
+  try{
+    const {data, error} = await sb.from("amtoolkit_workspace_state").select("data,updated_at").eq("workspace_id", currentWs.id).maybeSingle();
+    if(error) return;
+    if(data && data.data) applyState(data.data);
+    rerenderAll();
+    flashStatus("☁ " + currentWs.name + " loaded");
+  }catch(e){}
+}
+function scheduleCloudSave(){
+  if(!sb || !sbUser || !currentWs) return;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(saveCloud, 1500);
+}
+async function saveCloud(){
+  if(!sb || !sbUser || !currentWs) return;
+  const state = collectState();
+  try{
+    const {error} = await sb.from("amtoolkit_workspace_state").upsert({
+      workspace_id: currentWs.id, data:state, updated_at:new Date().toISOString(),
+      updated_by: sbUser.id, updated_by_email: sbUser.email
+    });
+    if(error){ flashStatus("⚠ Cloud save failed"); return; }
+    flashStatus("☁ Saved");
+    const now = Date.now();
+    if(now - lastHistAt > 180000){
+      lastHistAt = now;
+      sb.from("amtoolkit_workspace_history").insert({
+        workspace_id: currentWs.id, data:state, saved_by:sbUser.id, saved_by_email:sbUser.email
+      }).then(()=>{});
+    }
+  }catch(e){ flashStatus("⚠ Cloud save failed"); }
+}
+function flashStatus(msg){
+  const el = document.getElementById("saveStatus");
+  if(!el) return;
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.textContent=""; }, 2200);
+}
+
+/* ---------- Persistence (localStorage) ---------- */
+let saveTimer = null;
+
+function collectState(){
+  return {
+    v: 1,
+    assets, parRows, plan, apRows, tplData, taRows, planWeeks, haldenData,
+    taTarget: (document.getElementById("taTarget")||{}).value || "90",
+    planVersion: PLAN_VERSION,
+    paretoPeriod: (document.getElementById("paretoPeriod")||{}).value || "",
+    planStart: (document.getElementById("planStart")||{}).value || "",
+    savedAt: new Date().toISOString()
+  };
+}
+function saveState(){
+  scheduleCloudSave();
+}
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 500);
+}
+function applyState(st){
+  if(!st) return;
+  if(Array.isArray(st.assets) && st.assets.length) assets = st.assets;
+  if(Array.isArray(st.plan) && st.plan.length){
+    if(st.planVersion === PLAN_VERSION){
+      plan = st.plan;
+    } else {
+      // plan structure was updated in a newer toolkit version: keep new structure,
+      // migrate owner/status from old saved tasks where task names match
+      const oldTasks = {};
+      st.plan.forEach(ph=>(ph.tasks||[]).forEach(t=>{ if(t && t.n) oldTasks[t.n]= {o:t.o||"", st:t.st||0}; }));
+      plan.forEach(ph=>ph.tasks.forEach(t=>{
+        if(oldTasks[t.n]){ t.o = oldTasks[t.n].o; t.st = oldTasks[t.n].st; }
+      }));
+    }
+  }
+  if(Array.isArray(st.parRows) && st.parRows.length) parRows = st.parRows;
+  if(Array.isArray(st.haldenData) && st.haldenData.length) haldenData = st.haldenData;
+  if(Array.isArray(st.apRows) && st.apRows.length) apRows = st.apRows;
+  if(Array.isArray(st.taRows) && st.taRows.length) taRows = st.taRows;
+  if(st.planWeeks && st.planWeeks>=4 && st.planWeeks<=26) planWeeks = st.planWeeks;
+  if(st.taTarget){ const el=document.getElementById("taTarget"); if(el) el.value=st.taTarget; }
+  if(st.tplData && typeof st.tplData==="object"){
+    Object.keys(st.tplData).forEach(k=>{ if(TEMPLATES[k]) tplData[k]=st.tplData[k]; });
+  }
+  if(st.paretoPeriod){ const el=document.getElementById("paretoPeriod"); if(el) el.value=st.paretoPeriod; }
+  if(st.planStart){ const el=document.getElementById("planStart"); if(el) el.value=st.planStart; }
+}
+function rerenderAll(){
+  render(); renderRef(); renderPlan(); renderAP(); renderTA(); renderPareto();
+  if(currentTpl && TEMPLATES[currentTpl]) openTemplate(currentTpl); else showGallery();
+}
+/* autosave: catch every input/change anywhere (incl. contenteditable), plus clicks that mutate state */
+document.addEventListener("input", scheduleSave, true);
+document.addEventListener("change", scheduleSave, true);
+document.addEventListener("click", (e)=>{
+  if(e.target.closest("button")) scheduleSave();
+}, true);
+
+/* ---------- Excel export (SheetJS) ---------- */
+let xlsxReady = null;
+function loadXLSX(){
+  if(window.XLSX) return Promise.resolve();
+  if(xlsxReady) return xlsxReady;
+  xlsxReady = new Promise((res,rej)=>{
+    const sc = document.createElement("script");
+    sc.src = "https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js";
+    sc.onload = res;
+    sc.onerror = ()=>rej(new Error("offline"));
+    document.head.appendChild(sc);
+  });
+  return xlsxReady;
+}
+function xlsxFail(){
+  alert("Excel export needs an internet connection the first time (it loads a small library). Please connect and try again, or use Save as PDF.");
+}
+function autofit(ws, aoa){
+  const widths = [];
+  aoa.forEach(r=>r.forEach((c,i)=>{
+    const l = String(c==null?"":c).length;
+    widths[i] = Math.min(60, Math.max(widths[i]||10, l+2));
+  }));
+  ws["!cols"] = widths.map(w=>({wch:w}));
+}
+function sheetName(n){
+  return n.replace(/[\\\/\?\*\[\]:]/g,"-").slice(0,31);
+}
+
+/* ---- brand styles ---- */
+const XC = { navy:"1A2539", navy2:"243149", orange:"CD3B00", amber:"DF6C01",
+  paper:"F6F4EF", cream:"FFFDF7", line:"D8D3C8",
+  good:"2E7D4F", goodBg:"DFF0E5", partBg:"FBE9D2", gapBg:"F9DCD2", noneBg:"EDEBE4",
+  partTx:"9A5200", noneTx:"8B8677" };
+const XB = {style:"thin", color:{rgb:XC.line}};
+const BORD = {top:XB,bottom:XB,left:XB,right:XB};
+const ST = {
+  title:  {font:{bold:true,sz:15,color:{rgb:XC.navy}}, },
+  sub:    {font:{sz:10,color:{rgb:XC.noneTx}}},
+  group:  {font:{bold:true,sz:10,color:{rgb:XC.amber}}},
+  head:   {font:{bold:true,sz:10,color:{rgb:"FFFFFF"}}, fill:{fgColor:{rgb:XC.navy}},
+           border:BORD, alignment:{vertical:"center",wrapText:true}},
+  cell:   {font:{sz:10,color:{rgb:XC.navy}}, fill:{fgColor:{rgb:XC.cream}},
+           border:BORD, alignment:{vertical:"top",wrapText:true}},
+  hlabel: {font:{bold:true,sz:10,color:{rgb:XC.navy}}, fill:{fgColor:{rgb:XC.paper}}, border:BORD},
+  avg:    {font:{bold:true,sz:10,color:{rgb:XC.navy}}, fill:{fgColor:{rgb:XC.partBg}}, border:BORD},
+  s0:{font:{bold:true,sz:10,color:{rgb:XC.noneTx}}, fill:{fgColor:{rgb:XC.noneBg}}, border:BORD, alignment:{horizontal:"center"}},
+  s1:{font:{bold:true,sz:10,color:{rgb:XC.orange}}, fill:{fgColor:{rgb:XC.gapBg}}, border:BORD, alignment:{horizontal:"center"}},
+  s2:{font:{bold:true,sz:10,color:{rgb:XC.partTx}}, fill:{fgColor:{rgb:XC.partBg}}, border:BORD, alignment:{horizontal:"center"}},
+  s3:{font:{bold:true,sz:10,color:{rgb:XC.good}},  fill:{fgColor:{rgb:XC.goodBg}}, border:BORD, alignment:{horizontal:"center"}},
+  score:{font:{bold:true,sz:10,color:{rgb:XC.navy}}, fill:{fgColor:{rgb:XC.paper}}, border:BORD, alignment:{horizontal:"center"}},
+};
+function setSt(ws, r, c, st){
+  const ref = XLSX.utils.encode_cell({r:r,c:c});
+  if(ws[ref]) ws[ref].s = st;
+}
+function styleRow(ws, r, cols, st){ for(let c=0;c<cols;c++) setSt(ws,r,c,st); }
+
+/* Full workbook: matrix + notes + action reference + any filled templates */
+function exportWorkbook(){
+  loadXLSX().then(()=>{
+    const wb = XLSX.utils.book_new();
+
+    // ---- Sheet 1: Matrix ----
+    const head = ["Asset / Equipment", ...PILLARS.map((p,i)=>(i+1)+". "+p), "Score", "%"];
+    const rows = assets.map(a=>{
+      const t = a.scores.reduce((s,v)=>s+v,0);
+      return [a.name, ...a.scores.map(v=>STATES[v]), t+" / "+(PILLARS.length*MAX), Math.round(t/(PILLARS.length*MAX)*100)+"%"];
+    });
+    const avgRow = ["Pillar average", ...PILLARS.map((p,si)=>{
+      const avg = assets.length ? assets.reduce((s,a)=>s+a.scores[si],0)/assets.length : 0;
+      return Math.round(avg/MAX*100)+"%";
+    }), "", ""];
+    const aoa1 = [["Improvement Matrix"],["Exported "+new Date().toLocaleString()],[],head,...rows,avgRow];
+    const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
+    autofit(ws1, aoa1);
+    ws1["!rows"] = [{hpt:22},{hpt:14},{hpt:6},{hpt:30}];
+    setSt(ws1,0,0,ST.title); setSt(ws1,1,0,ST.sub);
+    styleRow(ws1,3,head.length,ST.head);
+    assets.forEach((a,ai)=>{
+      const r = 4+ai;
+      setSt(ws1,r,0,ST.hlabel);
+      a.scores.forEach((v,si)=>setSt(ws1,r,1+si,ST["s"+v]));
+      setSt(ws1,r,1+PILLARS.length,ST.score);
+      setSt(ws1,r,2+PILLARS.length,ST.score);
+    });
+    styleRow(ws1,4+assets.length,head.length,ST.avg);
+    XLSX.utils.book_append_sheet(wb, ws1, "Matrix");
+
+    // ---- Sheet 2: Notes ----
+    const aoa2 = [["Notes & Evidence"],[],["Asset","Pillar","Rating","Notes / evidence"]];
+    assets.forEach(a=>a.notes.forEach((n,si)=>{
+      if(n.trim()) aoa2.push([a.name, (si+1)+". "+PILLARS[si], STATES[a.scores[si]], n]);
+    }));
+    if(aoa2.length===3) aoa2.push(["(no notes captured)","","",""]);
+    const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
+    autofit(ws2, aoa2);
+    setSt(ws2,0,0,ST.title);
+    styleRow(ws2,2,4,ST.head);
+    for(let r=3;r<aoa2.length;r++) for(let c=0;c<4;c++) setSt(ws2,r,c,ST.cell);
+    XLSX.utils.book_append_sheet(wb, ws2, "Notes");
+
+    // ---- Sheet 3: Action measures ----
+    const aoa3 = [["Pillar Measures Reference"],[],["Pillar","Rating","Action measures","Possible tools"]];
+    PILLARS.forEach((p,si)=>[0,1,2,3].forEach(r=>{
+      aoa3.push([(si+1)+". "+p, STATES[r], GUIDANCE[si][r].join("\n"), TOOLS[si][r].join(", ")]);
+    }));
+    const ws3 = XLSX.utils.aoa_to_sheet(aoa3);
+    ws3["!cols"] = [{wch:28},{wch:14},{wch:70},{wch:60}];
+    setSt(ws3,0,0,ST.title);
+    styleRow(ws3,2,4,ST.head);
+    let rr = 3;
+    PILLARS.forEach((p,si)=>[0,1,2,3].forEach(r=>{
+      setSt(ws3,rr,0,ST.hlabel);
+      setSt(ws3,rr,1,ST["s"+r]);
+      setSt(ws3,rr,2,ST.cell);
+      setSt(ws3,rr,3,ST.cell);
+      rr++;
+    }));
+    XLSX.utils.book_append_sheet(wb, ws3, "Pillar Measures");
+
+    // ---- Sheet 4: Project plan ----
+    const wd = weekDates();
+    const aoa4 = [["8-Week Asset Management Improvement Plan"],[],["Phase","Task","Owner","Status","Start wk","End wk", ...Array.from({length:planWeeks},(_,i)=>"Wk "+(i+1)+(wd[i]?" ("+wd[i]+")":""))]];
+    plan.forEach((ph,pi)=>{
+      ph.tasks.forEach((t,ti)=>{
+        const row = [ph.phase, t.n, t.o, STLBL[t.st], t.w[0], t.w[1]];
+        for(let w=1;w<=planWeeks;w++) row.push(w>=t.w[0]&&w<=t.w[1] ? "█" : "");
+        aoa4.push(row);
+      });
+      const mrow = [ph.phase, "MILESTONE: "+ph.ms.label, "", "", ph.ms.week, ph.ms.week];
+      for(let w=1;w<=planWeeks;w++) mrow.push(w===ph.ms.week ? "◆" : "");
+      aoa4.push(mrow);
+    });
+    const ws4 = XLSX.utils.aoa_to_sheet(aoa4);
+    ws4["!cols"] = [{wch:34},{wch:52},{wch:14},{wch:13},{wch:8},{wch:8},...Array.from({length:planWeeks},()=>({wch:12}))];
+    setSt(ws4,0,0,ST.title);
+    styleRow(ws4,2,6+planWeeks,ST.head);
+    for(let r=3;r<aoa4.length;r++){
+      const isMs = String(aoa4[r][1]).startsWith("MILESTONE");
+      for(let c=0;c<6+planWeeks;c++){
+        if(c>=6 && aoa4[r][c]==="█") setSt(ws4,r,c,{fill:{fgColor:{rgb:XC.amber}},border:BORD});
+        else if(c>=6 && aoa4[r][c]==="◆") setSt(ws4,r,c,{font:{bold:true,color:{rgb:XC.navy}},fill:{fgColor:{rgb:XC.partBg}},border:BORD,alignment:{horizontal:"center"}});
+        else setSt(ws4,r,c, isMs ? ST.hlabel : ST.cell);
+      }
+    }
+    XLSX.utils.book_append_sheet(wb, ws4, "Project Plan");
+
+    // ---- Sheet: Pareto downtime ----
+    const pm = parMode();
+    const psorted = parRows.slice().sort((a,b)=>(b[pm]||0)-(a[pm]||0));
+    const ptotal = psorted.reduce((s,r)=>s+(+r[pm]||0),0);
+    const period = (document.getElementById("paretoPeriod")||{}).value || "";
+    const aoaP = [["Downtime Pareto Analysis" + (period?" — "+period:"")],["Ranked by: "+PAR_LABEL[pm]],[],["Rank","Asset","Downtime (min)","Events","% of total","Cumulative %","Vital few (80%)"]];
+    let pcum = 0;
+    psorted.forEach((r,i)=>{
+      const v=+r[pm]||0, pct= ptotal? v/ptotal*100:0;
+      const prev=pcum; pcum+=pct;
+      aoaP.push([i+1, r.name, r.dt, r.ev, pct.toFixed(1)+"%", Math.min(pcum,100).toFixed(1)+"%", (ptotal>0&&prev<80&&v>0)?"YES":""]);
+    });
+    const wsP = XLSX.utils.aoa_to_sheet(aoaP);
+    wsP["!cols"] = [{wch:6},{wch:30},{wch:14},{wch:9},{wch:11},{wch:13},{wch:14}];
+    setSt(wsP,0,0,ST.title); setSt(wsP,1,0,ST.sub);
+    styleRow(wsP,3,7,ST.head);
+    for(let r=4;r<aoaP.length;r++){
+      const vital = aoaP[r][6]==="YES";
+      for(let c=0;c<7;c++) setSt(wsP,r,c, vital ? ST.s1 : ST.cell);
+      if(vital) setSt(wsP,r,1,{font:{bold:true,sz:10,color:{rgb:XC.orange}},fill:{fgColor:{rgb:XC.gapBg}},border:BORD});
+    }
+    XLSX.utils.book_append_sheet(wb, wsP, "Pareto Downtime");
+
+    // ---- Sheet 5: Action plans ----
+    const aoa5 = [["Action Measures"],[],[...AP_COLS]];
+    apRows.forEach(r=>{
+      if(Object.values(r).some(v=>String(v).trim()))
+        aoa5.push([r.date,r.pillar,r.asset||"",r.prob,r.cause||"",r.cm,r.due,r.resp,PDCA_LBL[r.pdca||0],r.com]);
+    });
+    if(aoa5.length===3) aoa5.push(["","","","(no measures captured)","","","","","",""]);
+    const ws5 = XLSX.utils.aoa_to_sheet(aoa5);
+    ws5["!cols"] = [{wch:12},{wch:26},{wch:22},{wch:34},{wch:30},{wch:36},{wch:12},{wch:16},{wch:16},{wch:26}];
+    setSt(ws5,0,0,ST.title);
+    styleRow(ws5,2,10,ST.head);
+    for(let r=3;r<aoa5.length;r++) for(let c=0;c<10;c++) setSt(ws5,r,c,ST.cell);
+    XLSX.utils.book_append_sheet(wb, ws5, "Action Measures");
+
+    // ---- Sheet: Technical availability ----
+    const tval = taTarget();
+    const aoaT = [["Availability (%)"],["Target: "+tval+"%"],[],["Period","Technical Availability %","Paint Overall Availability %","vs Target (Technical)"]];
+    taRows.forEach(r=>{
+      if(r.p.trim() && (r.v!=null || r.pv!=null))
+        aoaT.push([r.p, r.v==null?"":r.v, r.pv==null?"":r.pv, r.v==null?"":(r.v>=tval ? "ON/ABOVE" : "BELOW")]);
+    });
+    if(aoaT.length===4) aoaT.push(["(no data)","","",""]);
+    const wsT = XLSX.utils.aoa_to_sheet(aoaT);
+    wsT["!cols"] = [{wch:18},{wch:22},{wch:24},{wch:16}];
+    setSt(wsT,0,0,ST.title); setSt(wsT,1,0,ST.sub);
+    styleRow(wsT,3,4,ST.head);
+    for(let r=4;r<aoaT.length;r++){
+      const below = aoaT[r][3]==="BELOW";
+      setSt(wsT,r,0,ST.cell);
+      setSt(wsT,r,1, aoaT[r][1]===""?ST.cell:(below?ST.s1:ST.s3));
+      setSt(wsT,r,2, ST.cell);
+      setSt(wsT,r,3, aoaT[r][3]===""?ST.cell:(below?ST.s1:ST.s3));
+    }
+    XLSX.utils.book_append_sheet(wb, wsT, "Availability");
+
+    // ---- Filled templates ----
+    Object.keys(tplData).forEach(sl=>{
+      const d = tplData[sl];
+      const hasData = d.hdr.some(x=>x.trim()) || d.cells.some(r=>r.some(c=>c.trim()));
+      if(!hasData) return;
+      XLSX.utils.book_append_sheet(wb, templateSheet(sl), sheetName(TEMPLATES[sl].name));
+    });
+
+    XLSX.writeFile(wb, "asset_management_toolkit.xlsx");
+  }).catch(xlsxFail);
+}
+
+function templateSheet(sl){
+  const t = TEMPLATES[sl], d = tplData[sl];
+  const aoa = [[t.name],[t.group],[t.purpose],[]];
+  t.hdr.forEach((h,i)=>aoa.push([h, d.hdr[i]]));
+  aoa.push([]);
+  const tableStart = aoa.length;
+  aoa.push(t.cols);
+  d.cells.forEach(r=>aoa.push([...r]));
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  autofit(ws, aoa);
+  ws["!rows"] = [{hpt:22},{hpt:13},{hpt:26}];
+  setSt(ws,0,0,ST.title);
+  setSt(ws,1,0,ST.group);
+  setSt(ws,2,0,ST.sub);
+  t.hdr.forEach((h,i)=>{ setSt(ws,4+i,0,ST.hlabel); setSt(ws,4+i,1,ST.cell); });
+  styleRow(ws,tableStart,t.cols.length,ST.head);
+  for(let r=tableStart+1;r<aoa.length;r++)
+    for(let c=0;c<t.cols.length;c++) setSt(ws,r,c,ST.cell);
+  return ws;
+}
+
+/* Single template export */
+function exportTemplateXlsx(sl){
+  initTplData(sl);
+  loadXLSX().then(()=>{
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, templateSheet(sl), sheetName(TEMPLATES[sl].name));
+    XLSX.writeFile(wb, tslug(TEMPLATES[sl].name)+".xlsx");
+  }).catch(xlsxFail);
+}
+
+
+initSupabase();
+render(); renderRef(); renderNav(""); showGallery(); renderPlan(); renderAP(); renderTA(); renderPareto(); renderHalden();
+/* fill pillar definition tooltips */
+document.querySelectorAll(".tipbox[data-def]").forEach(el=>{
+  const i = +el.dataset.def;
+  el.innerHTML = "<b>"+(i+1)+". "+PILLARS[i]+"</b>"+PILLAR_DEFS[i];
+});
+
+</script>
+</body>
+</html>
