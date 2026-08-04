@@ -144,6 +144,9 @@
   }
   table.ap thead tr.apf input:focus, table.ap thead tr.apf select:focus{outline:none;border-color:var(--amber);}
   table.ap thead tr.apf input::placeholder{color:#B9B4A6;}
+  .topscroll{overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:2px;}
+  .topscroll::-webkit-scrollbar{height:11px;}
+  .topscroll #apTopScrollInner{height:1px;}
   .ap-filtersummary{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:#5C5A50;font-weight:600;margin:8px 2px 18px;flex-wrap:wrap;gap:8px;}
   .ap-filtersummary .clearf{background:none;border:1.5px solid var(--orange);color:var(--orange);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;padding:4px 12px;}
   .ap-filtersummary .clearf:hover{background:var(--orange);color:#fff;}
@@ -769,7 +772,8 @@ async function adDelete(ws){
       <button class="btn" onclick="addActionRow()">+ Add Measure</button>
     </div>
   </div>
-  <div class="matrix-scroll">
+  <div class="topscroll" id="apTopScroll"><div id="apTopScrollInner"></div></div>
+  <div class="matrix-scroll" id="apScrollBody">
     <table class="ap" id="apTable"></table>
   </div>
   <div class="ap-filtersummary" id="apFilterSummary"></div>
@@ -1368,6 +1372,22 @@ function renderAP(){
       : `<span>${apRows.length} measure${apRows.length===1?"":"s"} total</span>`;
   }
   renderAPSummary();
+  syncApTopScroll();
+}
+
+function syncApTopScroll(){
+  const top = document.getElementById("apTopScroll");
+  const inner = document.getElementById("apTopScrollInner");
+  const body = document.getElementById("apScrollBody");
+  const tbl = document.getElementById("apTable");
+  if(!top||!inner||!body||!tbl) return;
+  inner.style.width = tbl.scrollWidth + "px";
+  if(top._synced) return;
+  top._synced = true;
+  let guard = false;
+  top.addEventListener("scroll", ()=>{ if(guard) return; guard=true; body.scrollLeft = top.scrollLeft; guard=false; });
+  body.addEventListener("scroll", ()=>{ if(guard) return; guard=true; top.scrollLeft = body.scrollLeft; guard=false; });
+  window.addEventListener("resize", ()=>{ inner.style.width = tbl.scrollWidth + "px"; });
 }
 
 function renderAPSummary(){
