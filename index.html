@@ -13,7 +13,7 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--paper);color:var(--ink);padding-bottom:70px;}
-  header{background:var(--navy);color:#fff;padding:24px 36px 0;border-bottom:5px solid var(--orange);}
+  header{background:var(--navy);color:#fff;padding:24px 36px 0;border-bottom:5px solid var(--orange);position:relative;}
   header .eyebrow{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:6px;}
   header h1{font-size:24px;font-weight:700;}
   header p{margin-top:5px;font-size:12.5px;color:#B9C2D4;max-width:860px;}
@@ -125,6 +125,51 @@
   table.ta td input:focus{outline:2px solid var(--amber);outline-offset:-2px;background:#fff;}
   table.ta td.pv input{text-align:right;width:88px;}
 
+  /* Tab 8: management dashboard */
+  .dash-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--line);}
+  .dash-title{font-size:20px;color:var(--navy);font-weight:800;margin-top:2px;}
+  .dash-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
+  .dash-kpi{background:#fff;border:1px solid var(--line);border-top:4px solid var(--orange);border-radius:8px;padding:14px 16px;box-shadow:0 2px 8px rgba(26,37,57,.05);}
+  .dash-kpi .n{font-size:26px;font-weight:800;color:var(--navy);line-height:1.1;}
+  .dash-kpi .l{font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:#8B8677;margin-top:4px;}
+  .dash-kpi .c{font-size:11px;color:#7A7566;margin-top:3px;}
+  .dash-kpi.good{border-top-color:var(--good);}
+  .dash-kpi.warn{border-top-color:var(--orange);}
+  .dash-kpi.warn .n{color:var(--orange);}
+  .dash-grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:0;}
+  @media (max-width:900px){.dash-grid2{grid-template-columns:1fr;}}
+  .dash-callout{background:#FCFBF8;border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:8px;padding:12px 14px;margin-bottom:10px;}
+  .dash-callout .k{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:800;color:var(--amber);}
+  .dash-callout .v{font-size:15px;font-weight:800;color:var(--navy);margin-top:3px;}
+  .dash-callout .d{font-size:11.5px;color:#5C5A50;margin-top:2px;}
+  .dash-callout.ok{border-left-color:var(--good);}
+  .dash-timeline{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;}
+  .dash-tphase{flex:1;min-width:100px;text-align:center;}
+  .dash-tphase .bar{height:10px;border-radius:5px;background:var(--none-bg);margin-bottom:6px;}
+  .dash-tphase .bar.done{background:var(--good);}
+  .dash-tphase .bar.prog{background:linear-gradient(90deg,var(--good) 0%, var(--good) var(--p,50%), var(--none-bg) var(--p,50%));}
+  .dash-tphase .lbl{font-size:9.5px;color:var(--navy);font-weight:600;line-height:1.3;}
+  .dash-tphase.current .lbl{color:var(--orange);font-weight:800;}
+  .status-badge{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:10px;white-space:nowrap;}
+  .status-badge.overdue{background:var(--gap-bg);color:var(--orange);}
+  .status-badge.inprog{background:var(--part-bg);color:#9A5200;}
+  .status-badge.notstarted{background:var(--none-bg);color:#8B8677;}
+  .status-badge.done{background:var(--good-bg);color:var(--good);}
+  table.ap#dashApDetail td{font-size:11px;padding:8px;}
+  .trend-head{font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:800;margin-bottom:10px;}
+  .trend-head.good{color:var(--good);}
+  .trend-head.bad{color:var(--orange);}
+  .trend-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-left:4px solid var(--good);border-radius:6px;margin-bottom:7px;background:#FCFBF8;}
+  .trend-row.bad{border-left-color:var(--orange);}
+  .trend-row .tf-name{flex:1;font-size:12px;font-weight:700;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .trend-row .tf-vals{font-size:10.5px;color:#7A7566;white-space:nowrap;}
+  .trend-row .tf-pct{font-size:12.5px;font-weight:800;min-width:52px;text-align:right;}
+  .trend-row.good .tf-pct{color:var(--good);}
+  .trend-row.bad .tf-pct{color:var(--orange);}
+  .dash-footer{text-align:center;font-size:11px;color:#8B8677;letter-spacing:.5px;margin-top:24px;padding-top:14px;border-top:1px solid var(--line);}
+  @media print{
+    #dashPreparedBy, #dashReportDate{border:none !important;}
+  }
   /* Tab 5: action plans */
   table.ap{border-collapse:collapse;width:100%;min-width:1100px;background:#fff;font-size:11.5px;}
   table.ap th{background:var(--navy);color:#fff;padding:9px 8px;font-size:10.5px;font-weight:600;border:1px solid var(--navy-2);text-align:left;}
@@ -602,6 +647,7 @@ async function adDelete(ws){
       </span>
     </span>
   </div>
+  <div id="buildTag" style="position:absolute;top:8px;right:14px;font-size:9px;color:#4A5878;letter-spacing:.5px;">build 2026-08-13.5</div>
   <div class="tabs">
     <button class="tab active" data-panel="p-pareto" onclick="switchTab(this)">1 · Pareto Downtime</button>
     <button class="tab" data-panel="p-halden" onclick="switchTab(this)">2 · Halden Dashboard</button>
@@ -610,6 +656,7 @@ async function adDelete(ws){
     <button class="tab" data-panel="p-templates" onclick="switchTab(this)">5 · Tool Templates</button>
     <button class="tab" data-panel="p-plan" onclick="switchTab(this)">6 · Project Plan</button>
     <button class="tab" data-panel="p-actionplans" onclick="switchTab(this)">7 · Action Measures</button>
+    <button class="tab" data-panel="p-dashboard" onclick="switchTab(this)">8 · Management Dashboard</button>
   </div>
 </header>
 
@@ -807,6 +854,98 @@ async function adDelete(ws){
 </div>
 </div>
 
+<!-- TAB 8: MANAGEMENT DASHBOARD -->
+<div class="panel" id="p-dashboard">
+<div class="wrap">
+  <div class="dash-head">
+    <div>
+      <div class="eyebrow" style="color:var(--amber);">Executive Summary</div>
+      <h2 class="dash-title">Asset Management Programme — Status Report</h2>
+      <div class="hint" style="margin:4px 0 0;" id="dashMeta"></div>
+    </div>
+    <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+      <div>
+        <label style="display:block;font-size:10.5px;font-weight:700;color:var(--navy);margin-bottom:3px;">Prepared by</label>
+        <input id="dashPreparedBy" placeholder="Name" style="border:1.5px solid var(--line);border-radius:6px;padding:6px 9px;font:inherit;font-size:12px;width:150px;" oninput="scheduleSave()">
+      </div>
+      <div>
+        <label style="display:block;font-size:10.5px;font-weight:700;color:var(--navy);margin-bottom:3px;">Report date</label>
+        <input id="dashReportDate" type="date" style="border:1.5px solid var(--line);border-radius:6px;padding:6px 9px;font:inherit;font-size:12px;" onchange="scheduleSave()">
+      </div>
+      <button class="btn ghost" onclick="window.print()">Save as PDF</button>
+      <button class="btn ghost" onclick="exportWorkbook()">Save to Excel</button>
+    </div>
+  </div>
+
+  <div class="tacard">
+    <div class="toolbar" style="margin-bottom:4px;">
+      <div>
+        <h3 class="tahead">Fault Trend — Halden Line</h3>
+        <div class="hint" style="margin:4px 0 0;">Downtime per fault, first half of tracked weeks vs second half. Shows whether the improvement effort is actually landing.</div>
+      </div>
+    </div>
+    <div class="dash-grid2" style="margin-top:12px;">
+      <div>
+        <h4 class="trend-head good">▼ Improving</h4>
+        <div id="dashHaldenImproving"></div>
+      </div>
+      <div>
+        <h4 class="trend-head bad">▲ Needs Attention</h4>
+        <div id="dashHaldenWorsening"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashKPIs" class="dash-kpis"></div>
+
+  <div class="dash-grid2">
+    <div class="tacard">
+      <h3 class="tahead">Readiness by Pillar</h3>
+      <div id="dashPillarBars"></div>
+    </div>
+    <div class="tacard">
+      <h3 class="tahead">Top Downtime Contributors</h3>
+      <div id="dashDowntimeBars"></div>
+    </div>
+  </div>
+
+  <div class="tacard">
+    <h3 class="tahead">Programme Timeline</h3>
+    <div id="dashTimeline"></div>
+  </div>
+
+  <div class="dash-grid2">
+    <div class="tacard">
+      <h3 class="tahead">Action Measures — By Pillar</h3>
+      <div id="dashApPillar"></div>
+    </div>
+    <div class="tacard">
+      <h3 class="tahead">Action Measures — By PDCA Stage</h3>
+      <div id="dashApStage"></div>
+    </div>
+  </div>
+
+  <div class="tacard">
+    <h3 class="tahead">Action Measures — Detail</h3>
+    <div class="hint" style="margin:4px 0 12px;">Every logged measure, overdue items first, then by due date. Edit these in the Action Measures tab.</div>
+    <div class="matrix-scroll"><table class="ap" id="dashApDetail"></table></div>
+  </div>
+
+  <div class="dash-grid2">
+    <div class="tacard">
+      <h3 class="tahead">Attention Required</h3>
+      <div id="dashAttention"></div>
+    </div>
+    <div class="tacard">
+      <h3 class="tahead">Technical Availability Trend</h3>
+      <div id="dashAvailChart"></div>
+    </div>
+  </div>
+
+  <div class="dash-footer" id="dashFooter"></div>
+</div>
+</div>
+
 <!-- TAB 3: TOOL TEMPLATES -->
 <div class="panel" id="p-templates">
 <div class="wrap">
@@ -937,6 +1076,7 @@ function switchTab(btn){
   document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
   btn.classList.add("active");
   document.getElementById(btn.dataset.panel).classList.add("active");
+  if(btn.dataset.panel==="p-dashboard") renderDashboard();
   window.scrollTo({top:0});
 }
 function goToPanel(id){
@@ -1441,9 +1581,7 @@ function syncApTopScroll(){
   window.addEventListener("resize", paint);
 }
 
-function renderAPSummary(){
-  const body = document.getElementById("apSummaryBody");
-  if(!body) return;
+function computeAPStats(){
   const total = apRows.length;
   const today = new Date(); today.setHours(0,0,0,0);
   const overdue = apRows.filter(r=>{
@@ -1454,7 +1592,6 @@ function renderAPSummary(){
   const done = apRows.filter(r=>(r.pdca||0)===4).length;
   const pct = total ? Math.round(done/total*100) : 0;
 
-  // by pillar
   const pillarCounts = {};
   PILLARS.forEach((p,i)=>pillarCounts[(i+1)+". "+p]=0);
   pillarCounts["General"]=0;
@@ -1463,22 +1600,30 @@ function renderAPSummary(){
     const key = r.pillar && pillarCounts.hasOwnProperty(r.pillar) ? r.pillar : (r.pillar? r.pillar : "(unassigned)");
     pillarCounts[key] = (pillarCounts[key]||0)+1;
   });
-  const maxP = Math.max(1,...Object.values(pillarCounts));
-  const pillarRows = Object.entries(pillarCounts).filter(([,c])=>c>0 || true)
-    .map(([k,c])=>`<div class="apsum-row"><span class="lbl" title="${esc(k)}">${esc(k)}</span><span class="track"><span style="width:${(c/maxP*100)}%"></span></span><span class="cnt">${c}</span></div>`).join("");
 
-  // by pdca stage
   const stageCounts = [0,0,0,0,0];
   apRows.forEach(r=> stageCounts[r.pdca||0]++ );
-  const maxS = Math.max(1,...stageCounts);
-  const stageRows = PDCA_LBL.map((l,i)=>`<div class="apsum-row"><span class="lbl">${l}</span><span class="track"><span style="width:${(stageCounts[i]/maxS*100)}%"></span></span><span class="cnt">${stageCounts[i]}</span></div>`).join("");
+
+  return {total, overdue, done, pct, pillarCounts, stageCounts};
+}
+function barRows(entries, max){
+  return entries.map(([k,c])=>`<div class="apsum-row"><span class="lbl" title="${esc(String(k))}">${esc(String(k))}</span><span class="track"><span style="width:${(c/max*100)}%"></span></span><span class="cnt">${c}</span></div>`).join("");
+}
+function renderAPSummary(){
+  const body = document.getElementById("apSummaryBody");
+  if(!body) return;
+  const s = computeAPStats();
+  const maxP = Math.max(1,...Object.values(s.pillarCounts));
+  const pillarRows = barRows(Object.entries(s.pillarCounts), maxP);
+  const maxS = Math.max(1,...s.stageCounts);
+  const stageRows = barRows(PDCA_LBL.map((l,i)=>[l,s.stageCounts[i]]), maxS);
 
   body.innerHTML = `
     <div class="apsum-cards">
-      <div class="apsum-card"><div class="n">${total}</div><div class="l">Total measures</div></div>
-      <div class="apsum-card ${overdue>0?'warn':''}"><div class="n">${overdue}</div><div class="l">Overdue</div></div>
-      <div class="apsum-card"><div class="n">${done}</div><div class="l">Completed (Act)</div></div>
-      <div class="apsum-card"><div class="n">${pct}%</div><div class="l">Completion rate</div></div>
+      <div class="apsum-card"><div class="n">${s.total}</div><div class="l">Total measures</div></div>
+      <div class="apsum-card ${s.overdue>0?'warn':''}"><div class="n">${s.overdue}</div><div class="l">Overdue</div></div>
+      <div class="apsum-card"><div class="n">${s.done}</div><div class="l">Completed (Act)</div></div>
+      <div class="apsum-card"><div class="n">${s.pct}%</div><div class="l">Completion rate</div></div>
     </div>
     <div class="apsum-grid">
       <div class="apsum-block"><h4>By Pillar</h4>${pillarRows}</div>
@@ -2057,6 +2202,8 @@ function collectState(){
     planVersion: PLAN_VERSION,
     paretoPeriod: (document.getElementById("paretoPeriod")||{}).value || "",
     planStart: (document.getElementById("planStart")||{}).value || "",
+    dashPreparedBy: (document.getElementById("dashPreparedBy")||{}).value || "",
+    dashReportDate: (document.getElementById("dashReportDate")||{}).value || "",
     savedAt: new Date().toISOString()
   };
 }
@@ -2094,10 +2241,35 @@ function applyState(st){
   }
   if(st.paretoPeriod){ const el=document.getElementById("paretoPeriod"); if(el) el.value=st.paretoPeriod; }
   if(st.planStart){ const el=document.getElementById("planStart"); if(el) el.value=st.planStart; }
+  if(st.dashPreparedBy){ const el=document.getElementById("dashPreparedBy"); if(el) el.value=st.dashPreparedBy; }
+  if(st.dashReportDate){ const el=document.getElementById("dashReportDate"); if(el) el.value=st.dashReportDate; }
+}
+function safeRun(fn, label, targetId){
+  try{
+    fn();
+    return true;
+  }catch(e){
+    console.warn("["+label+"] render failed:", e);
+    if(targetId){
+      const el = document.getElementById(targetId);
+      if(el) el.innerHTML = `<div style="padding:16px;background:#FDEDE4;border:1px solid var(--orange);border-radius:8px;color:var(--orange);font-size:12.5px;font-weight:600;">
+        This section (${label}) hit a display error and couldn't load: <span style="font-weight:400;">${(e&&e.message)?e.message:"unknown error"}</span>.
+        Try reloading the page. If it keeps happening, open your browser console (F12) and share this message.
+      </div>`;
+    }
+    return false;
+  }
 }
 function rerenderAll(){
-  render(); renderRef(); renderPlan(); renderAP(); renderTA(); renderPareto(); renderHalden();
-  if(currentTpl && TEMPLATES[currentTpl]) openTemplate(currentTpl); else showGallery();
+  safeRun(render, "matrix", "tbody");
+  safeRun(renderRef, "pillar measures", "refgrid");
+  safeRun(renderPlan, "project plan", "ganttTable");
+  safeRun(renderAP, "action measures", "apTable");
+  safeRun(renderTA, "availability", "taChart");
+  safeRun(renderPareto, "pareto", "paretoTable");
+  safeRun(renderHalden, "halden", "haldenStatus");
+  safeRun(renderDashboard, "dashboard", "dashKPIs");
+  safeRun(()=>{ if(currentTpl && TEMPLATES[currentTpl]) openTemplate(currentTpl); else showGallery(); }, "tool templates", "tplview");
 }
 /* autosave: catch every input/change anywhere (incl. contenteditable), plus clicks that mutate state */
 document.addEventListener("input", scheduleSave, true);
@@ -2105,6 +2277,271 @@ document.addEventListener("change", scheduleSave, true);
 document.addEventListener("click", (e)=>{
   if(e.target.closest("button")) scheduleSave();
 }, true);
+
+/* ---------- Tab 8: Management Dashboard ---------- */
+function renderDashboard(){
+  const kEl = document.getElementById("dashKPIs");
+  if(!kEl) return; // panel not in DOM yet on very first paint
+
+  // Every section is independently guarded: malformed data in one section
+  // (e.g. from an older saved schema) can never blank the rest of the dashboard,
+  // or block whatever tab renders after this one.
+  let readinessPct=0, pillarAvgPct=PILLARS.map(()=>0), weakPillarIdx=0, weakPillarV=0, weakAssetName="—";
+  try{
+    const totalMax = assets.length*PILLARS.length*MAX;
+    const totalScore = assets.reduce((s,a)=>s+(a.scores||[]).reduce((x,v)=>x+(v||0),0),0);
+    readinessPct = totalMax ? Math.round(totalScore/totalMax*100) : 0;
+    pillarAvgPct = PILLARS.map((p,si)=>{
+      const avg = assets.length ? assets.reduce((s,a)=>s+((a.scores&&a.scores[si])||0),0)/assets.length : 0;
+      return Math.round(avg/MAX*100);
+    });
+    let minV = Infinity;
+    pillarAvgPct.forEach((v,i)=>{ if(v<minV){minV=v;weakPillarIdx=i;} });
+    weakPillarV = minV===Infinity ? 0 : minV;
+    let minAV = Infinity;
+    assets.forEach(a=>{ const t=(a.scores||[]).reduce((s,v)=>s+(v||0),0); if(t<minAV){minAV=t;weakAssetName=a.name||"—";} });
+  }catch(e){ console.warn("[dashboard] readiness calc failed:", e); }
+
+  let planPct=0, allTasksLen=0;
+  try{
+    const allTasks = (plan||[]).flatMap(ph=>ph.tasks||[]);
+    allTasksLen = allTasks.length;
+    planPct = allTasksLen ? Math.round(allTasks.reduce((s,t)=>s+(t.st||0)/2,0)/allTasksLen*100) : 0;
+  }catch(e){ console.warn("[dashboard] plan progress calc failed:", e); }
+
+  let apStats = {total:0, overdue:0, done:0, pct:0, pillarCounts:{}, stageCounts:[0,0,0,0,0]};
+  try{ apStats = computeAPStats(); }catch(e){ console.warn("[dashboard] action measures calc failed:", e); }
+
+  let taLatest=null, tgt=90;
+  try{
+    tgt = taTarget();
+    const taFilled = (taRows||[]).filter(r=>r.v!=null);
+    taLatest = taFilled.length ? taFilled[taFilled.length-1].v : null;
+  }catch(e){ console.warn("[dashboard] availability calc failed:", e); }
+
+  let totalDowntime = 0;
+  try{ totalDowntime = (parRows||[]).reduce((s,r)=>s+(+r.dt||0),0); }catch(e){ console.warn("[dashboard] downtime calc failed:", e); }
+
+  const allTasks_len = allTasksLen;
+  kEl.innerHTML = `
+    <div class="dash-kpi ${readinessPct>=75?'good':readinessPct<50?'warn':''}"><div class="n">${readinessPct}%</div><div class="l">Overall Readiness</div><div class="c">${assets.length} asset${assets.length===1?'':'s'} assessed</div></div>
+    <div class="dash-kpi ${planPct>=75?'good':''}"><div class="n">${planPct}%</div><div class="l">Plan Progress</div><div class="c">${allTasks_len} tasks scheduled</div></div>
+    <div class="dash-kpi ${apStats.pct>=75?'good':''}"><div class="n">${apStats.pct}%</div><div class="l">Actions Completed</div><div class="c">${apStats.done} of ${apStats.total} measures</div></div>
+    <div class="dash-kpi ${apStats.overdue>0?'warn':'good'}"><div class="n">${apStats.overdue}</div><div class="l">Overdue Actions</div><div class="c">need attention</div></div>
+    <div class="dash-kpi ${taLatest==null?'':(taLatest>=tgt?'good':'warn')}"><div class="n">${taLatest==null?'—':taLatest+'%'}</div><div class="l">Availability</div><div class="c">target ${tgt}%</div></div>
+    <div class="dash-kpi"><div class="n">${fmtNum(totalDowntime)}</div><div class="l">Downtime (min)</div><div class="c">logged in Pareto tab</div></div>
+  `;
+
+  // ---- Pillar readiness bars ----
+  try{
+  const pb = document.getElementById("dashPillarBars");
+  if(pb) pb.innerHTML = PILLARS.map((p,si)=>{
+    const v = pillarAvgPct[si];
+    const col = v>=67 ? "var(--good)" : v>=34 ? "var(--amber)" : "var(--orange)";
+    return `<div class="apsum-row"><span class="lbl" title="${esc((si+1)+'. '+p)}">${si+1}. ${esc(p)}</span><span class="track"><span style="width:${v}%;background:${col}"></span></span><span class="cnt">${v}%</span></div>`;
+  }).join("");
+  }catch(e){ console.warn("[dashboard] pillar bars failed:", e); }
+
+  // ---- Top downtime contributors (Pareto) ----
+  try{
+    const db = document.getElementById("dashDowntimeBars");
+    if(db){
+      const top5 = (parRows||[]).slice().sort((a,b)=>(+b.dt||0)-(+a.dt||0)).filter(r=>(+r.dt||0)>0).slice(0,5);
+      const maxDt = Math.max(1,...top5.map(r=>+r.dt||0));
+      db.innerHTML = top5.length
+        ? top5.map(r=>`<div class="apsum-row"><span class="lbl" title="${esc(r.name||"")}">${esc(r.name||"")}</span><span class="track"><span style="width:${(r.dt/maxDt*100)}%"></span></span><span class="cnt">${fmtNum(r.dt)}</span></div>`).join("")
+        : '<div class="hint" style="margin:0;">No downtime logged yet — enter values in the Pareto Downtime tab.</div>';
+    }
+  }catch(e){ console.warn("[dashboard] downtime bars failed:", e); }
+
+  // ---- Programme timeline ----
+  try{
+    const tl = document.getElementById("dashTimeline");
+    if(tl){
+      const safePlan = (plan||[]).map(ph=>({phase:ph.phase||"", tasks:ph.tasks||[]}));
+      let currentIdx = safePlan.findIndex(ph=>ph.tasks.some(t=>(t.st||0)<2));
+      if(currentIdx<0) currentIdx = safePlan.length-1;
+      tl.innerHTML = `<div class="dash-timeline">` + safePlan.map((ph,pi)=>{
+        const ts = ph.tasks;
+        const p = ts.length ? Math.round(ts.reduce((s,t)=>s+(t.st||0)/2,0)/ts.length*100) : 0;
+        const cls = p>=100?"done":(p>0?"prog":"");
+        const shortName = String(ph.phase).replace(/^Pillar (\d): /,"P$1: ").replace("Mobilise & Baseline","Mobilise").replace("Re-assess & Sustain","Re-assess");
+        return `<div class="dash-tphase ${pi===currentIdx?'current':''}"><div class="bar ${cls}" style="--p:${p}%"></div><div class="lbl">${esc(shortName)}<br>${p}%</div></div>`;
+      }).join("") + `</div>`;
+    }
+  }catch(e){ console.warn("[dashboard] timeline failed:", e); }
+
+  // ---- Action measures breakdowns ----
+  try{
+    const maxP = Math.max(1,...Object.values(apStats.pillarCounts||{}));
+    const apPillarEl = document.getElementById("dashApPillar");
+    if(apPillarEl) apPillarEl.innerHTML = barRows(Object.entries(apStats.pillarCounts||{}), maxP);
+    const maxS = Math.max(1,...(apStats.stageCounts||[0]));
+    const apStageEl = document.getElementById("dashApStage");
+    if(apStageEl) apStageEl.innerHTML = barRows(PDCA_LBL.map((l,i)=>[l,(apStats.stageCounts||[])[i]||0]), maxS);
+  }catch(e){ console.warn("[dashboard] action measures breakdown failed:", e); }
+
+  // ---- Action Measures — Detail table ----
+  try{
+    const tbl = document.getElementById("dashApDetail");
+    if(tbl){
+      const today = new Date(); today.setHours(0,0,0,0);
+      const rowsWithMeta = (apRows||[]).map(r=>{
+        const pdca = r.pdca||0;
+        let due = null, overdue = false;
+        if(r.due){ const d = new Date(r.due+"T00:00:00"); if(!isNaN(d)){ due = d; overdue = pdca!==4 && d < today; } }
+        let prio, badgeCls, badgeLbl;
+        if(overdue){ prio=0; badgeCls="overdue"; badgeLbl="Overdue"; }
+        else if(pdca===0){ prio=1; badgeCls="notstarted"; badgeLbl="Not started"; }
+        else if(pdca===4){ prio=3; badgeCls="done"; badgeLbl="Complete"; }
+        else { prio=2; badgeCls="inprog"; badgeLbl=PDCA_LBL[pdca]; }
+        return {r, prio, badgeCls, badgeLbl, due};
+      }).filter(x=>x.r.prob || x.r.cm || x.r.asset); // skip fully blank rows
+      rowsWithMeta.sort((a,b)=>{
+        if(a.prio!==b.prio) return a.prio-b.prio;
+        if(a.due && b.due) return a.due-b.due;
+        if(a.due) return -1;
+        if(b.due) return 1;
+        return 0;
+      });
+      if(!rowsWithMeta.length){
+        tbl.innerHTML = '<tr><td style="padding:14px;color:#8B8677;">No action measures logged yet — add them in the Action Measures tab.</td></tr>';
+      } else {
+        let html = `<tr><th>Status</th><th>Due Date</th><th>Pillar</th><th>Asset</th><th>Problem / Finding</th><th>Countermeasure</th><th>Responsible</th></tr>`;
+        rowsWithMeta.forEach(({r,badgeCls,badgeLbl})=>{
+          html += `<tr>
+            <td><span class="status-badge ${badgeCls}">${badgeLbl}</span></td>
+            <td>${esc(r.due||"—")}</td>
+            <td>${esc(r.pillar||"—")}</td>
+            <td>${esc(r.asset||"—")}</td>
+            <td>${esc(r.prob||"—")}</td>
+            <td>${esc(r.cm||"—")}</td>
+            <td>${esc(r.resp||"—")}</td>
+          </tr>`;
+        });
+        tbl.innerHTML = html;
+      }
+    }
+  }catch(e){ console.warn("[dashboard] action measures detail failed:", e); }
+
+  // ---- Halden fault trend: improving vs worsening ----
+  try{
+    const impEl = document.getElementById("dashHaldenImproving");
+    const wrsEl = document.getElementById("dashHaldenWorsening");
+    if(impEl && wrsEl){
+      const hData = (typeof haldenData!=="undefined" && haldenData && haldenData.length) ? haldenData : (typeof HALDEN_DEFAULT!=="undefined" ? HALDEN_DEFAULT : []);
+      const hWeeks = [...new Set(hData.map(r=>r.cw))].filter(w=>w>0).sort((a,b)=>a-b);
+      if(hWeeks.length<2){
+        const msg = '<div class="hint" style="margin:0;">Need at least 2 tracked weeks on the Halden Dashboard to compare trends.</div>';
+        impEl.innerHTML = msg; wrsEl.innerHTML = "";
+      } else {
+        const half = Math.ceil(hWeeks.length/2);
+        const firstWeeks = new Set(hWeeks.slice(0,half));
+        const secondWeeks = new Set(hWeeks.slice(half));
+        const byFault = {};
+        hData.forEach(r=>{
+          const k = r.fault||"(unspecified)";
+          if(!byFault[k]) byFault[k] = {first:0, second:0};
+          if(firstWeeks.has(r.cw)) byFault[k].first += (+r.dt||0);
+          else if(secondWeeks.has(r.cw)) byFault[k].second += (+r.dt||0);
+        });
+        const improving = [], worsening = [];
+        Object.entries(byFault).forEach(([fault,v])=>{
+          if(v.first===0 && v.second===0) return;
+          const delta = v.second - v.first;
+          if(delta<0) improving.push({fault, ...v, delta});
+          else if(delta>0) worsening.push({fault, ...v, delta});
+        });
+        improving.sort((a,b)=>(b.first-b.second)-(a.first-a.second));
+        worsening.sort((a,b)=>(b.second-b.first)-(a.second-a.first));
+
+        function trendRow(x, good){
+          const pct = x.first>0 ? Math.round(Math.abs(x.delta)/x.first*100) : null;
+          const pctLbl = pct===null ? "NEW" : (pct+"%");
+          return `<div class="trend-row ${good?'':'bad'}">
+            <span class="tf-name" title="${esc(x.fault)}">${esc(x.fault)}</span>
+            <span class="tf-vals">${fmtNum(x.first)}→${fmtNum(x.second)} min</span>
+            <span class="tf-pct">${good?"▼":"▲"} ${pctLbl}</span>
+          </div>`;
+        }
+        impEl.innerHTML = improving.length
+          ? improving.slice(0,6).map(x=>trendRow(x,true)).join("") + (improving.length>6?`<div class="hint" style="margin:4px 0 0;">+${improving.length-6} more improving</div>`:"")
+          : '<div class="hint" style="margin:0;">No faults showing a downtime reduction yet.</div>';
+        wrsEl.innerHTML = worsening.length
+          ? worsening.slice(0,6).map(x=>trendRow(x,false)).join("") + (worsening.length>6?`<div class="hint" style="margin:4px 0 0;">+${worsening.length-6} more needing attention</div>`:"")
+          : '<div class="hint" style="margin:0;">No faults trending worse — good news.</div>';
+      }
+    }
+  }catch(e){ console.warn("[dashboard] halden trend failed:", e); }
+
+  // ---- Attention required ----
+  try{
+    const att = document.getElementById("dashAttention");
+    if(att){
+      const today = new Date(); today.setHours(0,0,0,0);
+      const overdueList = (apRows||[]).filter(r=>{
+        if(!r.due || (r.pdca||0)===4) return false;
+        const d = new Date(r.due+"T00:00:00");
+        return !isNaN(d) && d < today;
+      }).sort((a,b)=>String(a.due).localeCompare(String(b.due))).slice(0,4);
+      let html = `<div class="dash-callout"><div class="k">Weakest Pillar</div><div class="v">${assets.length?esc((weakPillarIdx+1)+". "+PILLARS[weakPillarIdx]):"—"}</div><div class="d">${assets.length?weakPillarV+"% average readiness":"Score the matrix to identify"}</div></div>`;
+      html += `<div class="dash-callout"><div class="k">Highest-Risk Asset</div><div class="v">${esc(weakAssetName)}</div><div class="d">${assets.length?"Lowest readiness score in the matrix":"No assets scored yet"}</div></div>`;
+      if(overdueList.length){
+        html += overdueList.map(r=>`<div class="dash-callout"><div class="k">Overdue since ${esc(r.due)}</div><div class="v">${esc(r.prob||"(no description)")}</div><div class="d">${esc(r.asset||"")}${r.resp?" · "+esc(r.resp):""}</div></div>`).join("");
+      } else {
+        html += `<div class="dash-callout ok"><div class="k">Action Measures</div><div class="v">No overdue items</div><div class="d">All measures are on track</div></div>`;
+      }
+      att.innerHTML = html;
+    }
+  }catch(e){ console.warn("[dashboard] attention panel failed:", e); }
+
+  // ---- Availability trend (mini, both series) ----
+  try{
+  const avEl = document.getElementById("dashAvailChart");
+  if(avEl){
+    const data = taRows.filter(r=>(r.v!=null||r.pv!=null) && r.p.trim()!=="");
+    if(!data.length){
+      avEl.innerHTML = '<div class="hint" style="margin:0;">No availability data yet — enter values on the Action Measures tab.</div>';
+    } else {
+      const W=520,H=190,padL=34,padR=14,padT=14,padB=34;
+      const n=data.length, cw=n>1?(W-padL-padR)/(n-1):0;
+      const vmin = Math.max(0, Math.min(tgt, ...data.map(d=>d.v!=null?d.v:100), ...data.map(d=>d.pv!=null?d.pv:100)) - 8);
+      const y = v => padT + (1-(v-vmin)/(100-vmin))*(H-padT-padB);
+      const xAt = i => n>1 ? padL+i*cw : (padL+W-padR)/2;
+      function pathFor(key,color){
+        const pts = [];
+        data.forEach((d,i)=>{ if(d[key]!=null) pts.push([xAt(i), y(d[key])]); });
+        if(pts.length<1) return "";
+        const dstr = pts.length>1 ? "M"+pts.map(p=>p.join(",")).join(" L") : "";
+        const dots = pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.8" fill="${color}"/>`).join("");
+        return `<path d="${dstr}" fill="none" stroke="${color}" stroke-width="2"/>${dots}`;
+      }
+      const yt = y(tgt);
+      avEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;">
+        <line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="#D8D3C8"/>
+        <line x1="${padL}" y1="${yt}" x2="${W-padR}" y2="${yt}" stroke="#DF6C01" stroke-dasharray="5 4" stroke-width="1.4"/>
+        <text x="${W-padR}" y="${yt-4}" text-anchor="end" font-size="9" font-weight="800" fill="#DF6C01">Target ${tgt}%</text>
+        ${pathFor('v','#1A2539')}
+        ${pathFor('pv','#DF6C01')}
+      </svg>
+      <div class="parlegend"><span><i style="background:#1A2539;"></i>Technical Availability</span><span><i style="background:#DF6C01;"></i>Paint Overall Availability</span></div>`;
+    }
+  }
+  }catch(e){ console.warn("[dashboard] availability chart failed:", e); }
+
+  // ---- meta / footer ----
+  try{
+    const meta = document.getElementById("dashMeta");
+    if(meta) meta.textContent = (currentWs? currentWs.name+" · " : "") + new Date().toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
+    const foot = document.getElementById("dashFooter");
+    if(foot){
+      const by = (document.getElementById("dashPreparedBy")||{}).value || "";
+      const rd = (document.getElementById("dashReportDate")||{}).value || "";
+      foot.textContent = "Asset Management Performance Toolkit" + (by?" · Prepared by "+by:"") + (rd?" · "+rd:"");
+    }
+  }catch(e){ console.warn("[dashboard] footer failed:", e); }
+}
+function fmtNum(n){ return (Math.round(n*10)/10).toLocaleString(); }
 
 /* ---------- Excel export (SheetJS) ---------- */
 let xlsxReady = null;
@@ -2254,6 +2691,48 @@ function exportWorkbook(){
     }
     XLSX.utils.book_append_sheet(wb, ws4, "Project Plan");
 
+    // ---- Sheet: Management Dashboard ----
+    (function(){
+      const totalMax = assets.length*PILLARS.length*MAX;
+      const totalScore = assets.reduce((s,a)=>s+a.scores.reduce((x,v)=>x+v,0),0);
+      const readinessPct = totalMax ? Math.round(totalScore/totalMax*100) : 0;
+      const allTasks = plan.flatMap(ph=>ph.tasks);
+      const planPct = allTasks.length ? Math.round(allTasks.reduce((s,t)=>s+t.st/2,0)/allTasks.length*100) : 0;
+      const apStats = computeAPStats();
+      const totalDowntime = parRows.reduce((s,r)=>s+(+r.dt||0),0);
+      const taFilled = taRows.filter(r=>r.v!=null);
+      const taLatest = taFilled.length ? taFilled[taFilled.length-1].v : "—";
+      const by = (document.getElementById("dashPreparedBy")||{}).value || "";
+      const rd = (document.getElementById("dashReportDate")||{}).value || "";
+
+      const aoaD = [
+        ["Asset Management Programme — Status Report"],
+        ["Prepared by: "+(by||"—")+"   Report date: "+(rd||"—")+"   Workspace: "+(currentWs?currentWs.name:"—")],
+        [],
+        ["KPI","Value"],
+        ["Overall Readiness", readinessPct+"%"],
+        ["Project Plan Progress", planPct+"%"],
+        ["Action Measures Completion", apStats.pct+"%"],
+        ["Overdue Actions", apStats.overdue],
+        ["Technical Availability (latest)", taLatest==="—"?"—":taLatest+"%"],
+        ["Total Downtime Logged (min)", totalDowntime],
+        [],
+        ["Pillar","Readiness %"]
+      ];
+      PILLARS.forEach((p,si)=>{
+        const avg = assets.length ? assets.reduce((s,a)=>s+a.scores[si],0)/assets.length : 0;
+        aoaD.push([(si+1)+". "+p, Math.round(avg/MAX*100)+"%"]);
+      });
+      const wsD = XLSX.utils.aoa_to_sheet(aoaD);
+      wsD["!cols"] = [{wch:40},{wch:20}];
+      setSt(wsD,0,0,ST.title); setSt(wsD,1,0,ST.sub);
+      styleRow(wsD,3,2,ST.head);
+      for(let r=4;r<10;r++){ setSt(wsD,r,0,ST.hlabel); setSt(wsD,r,1,ST.score); }
+      styleRow(wsD,11,2,ST.head);
+      for(let r=12;r<aoaD.length;r++){ setSt(wsD,r,0,ST.cell); setSt(wsD,r,1,ST.score); }
+      XLSX.utils.book_append_sheet(wb, wsD, "Dashboard");
+    })();
+
     // ---- Sheet: Pareto downtime ----
     const pm = parMode();
     const psorted = parRows.slice().sort((a,b)=>(b[pm]||0)-(a[pm]||0));
@@ -2357,7 +2836,16 @@ function exportTemplateXlsx(sl){
 
 
 initSupabase();
-render(); renderRef(); renderNav(""); showGallery(); renderPlan(); renderAP(); renderTA(); renderPareto(); renderHalden();
+safeRun(render, "matrix", "tbody");
+safeRun(renderRef, "pillar measures", "refgrid");
+safeRun(()=>renderNav(""), "templates nav", "navlist");
+safeRun(showGallery, "tool templates", "tplview");
+safeRun(renderPlan, "project plan", "ganttTable");
+safeRun(renderAP, "action measures", "apTable");
+safeRun(renderTA, "availability", "taChart");
+safeRun(renderPareto, "pareto", "paretoTable");
+safeRun(renderHalden, "halden", "haldenStatus");
+safeRun(renderDashboard, "dashboard", "dashKPIs");
 /* fill pillar definition tooltips */
 document.querySelectorAll(".tipbox[data-def]").forEach(el=>{
   const i = +el.dataset.def;
