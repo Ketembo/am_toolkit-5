@@ -279,7 +279,7 @@
 
 
   /* ---------- admin panel ---------- */
-  #adminPanel{position:fixed;inset:0;z-index:900;display:none;align-items:flex-start;justify-content:center;background:rgba(15,22,38,.78);backdrop-filter:blur(4px);overflow-y:auto;padding:40px 16px;}
+  #adminPanel{position:fixed;inset:0;z-index:1100;display:none;align-items:flex-start;justify-content:center;background:rgba(15,22,38,.78);backdrop-filter:blur(4px);overflow-y:auto;padding:40px 16px;}
   #adminPanel.show{display:flex;}
   .ad-card{width:min(860px,100%);background:var(--paper);border-radius:14px;border-top:5px solid var(--orange);padding:26px 30px 30px;box-shadow:0 30px 80px rgba(0,0,0,.5);}
   .ad-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
@@ -821,6 +821,7 @@ table.pareto td .rankbadge{background:#3A4E73;}
       <label>Select workspace</label>
       <div id="lpWsList"></div>
     </div>
+    <button class="lp-btn" id="lpAdminBtn" style="display:none;margin-top:10px;background:transparent;border:1px solid var(--amber,#DF6C01);color:var(--amber,#DF6C01);" onclick="openAdmin()">⚙ Open Admin — manage workspaces</button>
     <div class="lp-foot">Seven-pillar asset improvement methodology · Secure cloud workspace</div>
   </div>
 </div>
@@ -2484,9 +2485,14 @@ async function checkAdmin(){
   }catch(e){ isAdmin = false; }
   const b = document.getElementById("adminBtn");
   if(b) b.style.display = isAdmin ? "inline-block" : "none";
+  const lb = document.getElementById("lpAdminBtn");
+  if(lb) lb.style.display = (isAdmin && sbUser && !currentWs) ? "block" : "none";
 }
 function openAdmin(){ document.getElementById("adminPanel").classList.add("show"); adRefresh(); }
-function closeAdmin(){ document.getElementById("adminPanel").classList.remove("show"); fetchWorkspaces(); }
+function closeAdmin(){
+  document.getElementById("adminPanel").classList.remove("show");
+  if(sbUser && !currentWs) afterSignIn(); else fetchWorkspaces();
+}
 function adError(msg){ document.getElementById("adErr").textContent = msg||""; }
 
 async function adRefresh(){
@@ -2572,6 +2578,8 @@ function lpUpdate(){
   const lp = document.getElementById("loginPage");
   if(!lp) return;
   lp.classList.toggle("show", !sbUser || !currentWs);
+  const lb = document.getElementById("lpAdminBtn");
+  if(lb) lb.style.display = (typeof isAdmin!=="undefined" && isAdmin && sbUser && !currentWs) ? "block" : "none";
 }
 function lpSignIn(){
   const err = document.getElementById("lpErr");
@@ -2631,10 +2639,17 @@ function showWsPicker(){
   lpUpdate();
 }
 async function afterSignIn(){
-  checkAdmin();
+  await checkAdmin();
   await fetchWorkspaces();
   const err = document.getElementById("lpErr");
   if(!workspaces.length){
+    if(isAdmin){
+      if(err) err.textContent = "No workspaces exist yet — create the first one in the Admin panel.";
+      document.querySelector("#loginPage .lp-form").style.display = "block";
+      document.getElementById("lpWsPick").style.display = "none";
+      openAdmin();
+      return;
+    }
     if(err) err.textContent = "Your account has no workspace assigned yet. Please contact your provider.";
     document.querySelector("#loginPage .lp-form").style.display = "block";
     document.getElementById("lpWsPick").style.display = "none";
